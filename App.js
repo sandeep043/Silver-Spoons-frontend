@@ -32,8 +32,9 @@ export default function App() {
       <NavigationContainer>
         <Stack.Navigator initialRouteName='onboarding'>
           <Stack.Screen name="onboarding" options={{ headerShown: false }} component={OnboardingScreen} />
-          <Stack.Screen name="login" component={LoginScreen} />
-          <Stack.Screen name="signUp" component={SignUpScreen} />
+          <Stack.Screen name="login" options={{ headerShown: false }} component={LoginScreen} />
+          <Stack.Screen name="signUp" options={{ headerShown: false }} component={SignUpScreen} />
+          <Stack.Screen name="verifyOTP" options={{ headerShown: false }} component={VerifyOTP} />
           {/* <Stack.Screen name="Home" component={MyTabs} /> */}
         </Stack.Navigator>
       </NavigationContainer>

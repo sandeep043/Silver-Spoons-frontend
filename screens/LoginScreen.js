@@ -16,6 +16,7 @@ function LoginScreen() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
 
     const isAuthenticated = useSelector(selectIsAuthenticated);
     const token = useSelector(selectCurrentToken);
@@ -45,13 +46,13 @@ function LoginScreen() {
     return (
         <View style={styles.container}>
             <View style={styles.card}>
-                <Text style={styles.title}>Welcome Back</Text>
-                <Text style={styles.subtitle}>Please log in to continue</Text>
+                <Text style={styles.title}>Welcome Back!</Text>
+                <Text style={styles.subtitle}>Please login to your account</Text>
 
-                <Text style={styles.label}>Email Address</Text>
                 <TextInput
                     style={styles.input}
-                    placeholder="Enter your email"
+                    placeholder="Email/Ph number"
+                    placeholderTextColor="#6b7280"
                     value={email}
                     autoCapitalize="none"
                     autoCorrect={false}
@@ -59,26 +60,39 @@ function LoginScreen() {
                     keyboardType="email-address"
                 />
 
-                <Text style={styles.label}>Password</Text>
-                <TextInput
-                    style={styles.input}
-                    placeholder="Enter your password"
-                    value={password}
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    onChangeText={setPassword}
-                    secureTextEntry={true}
-                />
+                <View style={styles.passwordContainer}>
+                    <TextInput
+                        style={styles.passwordInput}
+                        placeholder="Password"
+                        placeholderTextColor="#6b7280"
+                        value={password}
+                        autoCapitalize="none"
+                        autoCorrect={false}
+                        onChangeText={setPassword}
+                        secureTextEntry={!showPassword}
+                    />
+                    <Pressable
+                        style={styles.eyeIcon}
+                        onPress={() => setShowPassword(!showPassword)}
+                    >
+                        <Text style={styles.eyeIconText}>👁</Text>
+                    </Pressable>
+                </View>
 
                 {error ? <Text style={styles.error}>{error}</Text> : null}
 
                 <Pressable style={styles.loginButton} onPress={handleLogin}>
-                    <Text style={styles.loginText}>Login</Text>
+                    <Text style={styles.loginText}>LOGIN</Text>
                 </Pressable>
 
-                <Pressable onPress={() => nav.navigate('SignUp')}>
+                <Pressable style={styles.googleButton}>
+                    <Text style={styles.googleIcon}>G</Text>
+                    <Text style={styles.googleText}>Login with google</Text>
+                </Pressable>
+
+                <Pressable onPress={() => nav.navigate('signUp')}>
                     <Text style={styles.signupText}>
-                        Don’t have an account? <Text style={styles.signupLink}>Sign Up</Text>
+                        Don't have an account? <Text style={styles.signupLink}>Sign Up</Text>
                     </Text>
                 </Pressable>
             </View>
@@ -92,7 +106,7 @@ export default LoginScreen
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f3f4f6',
+        backgroundColor: '#000000',
         justifyContent: 'center',
         alignItems: 'center',
         paddingHorizontal: 20,
@@ -100,55 +114,94 @@ const styles = StyleSheet.create({
     card: {
         width: '100%',
         maxWidth: 400,
-        backgroundColor: '#fff',
+        backgroundColor: '#000000',
         borderRadius: 12,
         padding: 24,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.1,
-        shadowRadius: 6,
-        elevation: 4,
     },
     title: {
-        fontSize: 26,
-        fontWeight: '700',
-        color: '#111827',
+        fontSize: 32,
+        fontWeight: '400',
+        color: '#ffffff',
         textAlign: 'center',
-        marginBottom: 4,
+        marginBottom: 8,
+        letterSpacing: 0.5,
     },
     subtitle: {
         fontSize: 14,
-        color: '#6b7280',
+        color: '#9ca3af',
         textAlign: 'center',
-        marginBottom: 20,
-    },
-    label: {
-        fontSize: 14,
-        fontWeight: '600',
-        color: '#374151',
-        marginTop: 12,
-        marginBottom: 4,
+        marginBottom: 60,
     },
     input: {
-        borderWidth: 1,
-        borderColor: '#d1d5db',
-        borderRadius: 8,
-        paddingVertical: 10,
-        paddingHorizontal: 14,
-        fontSize: 16,
-        backgroundColor: '#f9fafb',
+        borderWidth: 0,
+        borderBottomWidth: 1,
+        borderBottomColor: '#374151',
+        paddingVertical: 12,
+        paddingHorizontal: 0,
+        fontSize: 14,
+        backgroundColor: 'transparent',
+        color: '#ffffff',
+        marginBottom: 30,
+    },
+    passwordContainer: {
+        position: 'relative',
+        borderBottomWidth: 1,
+        borderBottomColor: '#374151',
+        marginBottom: 30,
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    passwordInput: {
+        flex: 1,
+        paddingVertical: 12,
+        paddingHorizontal: 0,
+        fontSize: 14,
+        backgroundColor: 'transparent',
+        color: '#ffffff',
+        borderWidth: 0,
+    },
+    eyeIcon: {
+        padding: 8,
+    },
+    eyeIconText: {
+        fontSize: 18,
+        color: '#6b7280',
     },
     loginButton: {
-        backgroundColor: '#2563eb',
-        paddingVertical: 12,
-        borderRadius: 8,
-        marginTop: 24,
+        backgroundColor: '#1f2937',
+        paddingVertical: 16,
+        borderRadius: 30,
+        marginTop: 80,
+        marginBottom: 20,
         alignItems: 'center',
     },
     loginText: {
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: '600',
+        color: '#ffffff',
+        fontSize: 14,
+        fontWeight: '500',
+        letterSpacing: 1,
+    },
+    googleButton: {
+        backgroundColor: 'transparent',
+        paddingVertical: 14,
+        borderRadius: 30,
+        marginBottom: 20,
+        alignItems: 'center',
+        flexDirection: 'row',
+        justifyContent: 'center',
+        borderWidth: 1,
+        borderColor: '#1f2937',
+    },
+    googleIcon: {
+        fontSize: 18,
+        marginRight: 10,
+        fontWeight: 'bold',
+        color: '#ffffff',
+    },
+    googleText: {
+        color: '#ffffff',
+        fontSize: 14,
+        fontWeight: '400',
     },
     error: {
         color: '#ef4444',
@@ -160,10 +213,10 @@ const styles = StyleSheet.create({
         marginTop: 16,
         textAlign: 'center',
         fontSize: 14,
-        color: '#4b5563',
+        color: '#9ca3af',
     },
     signupLink: {
-        color: '#2563eb',
+        color: '#ef4444',
         fontWeight: '600',
     },
 });
