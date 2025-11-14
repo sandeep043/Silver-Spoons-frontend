@@ -2,6 +2,7 @@ import { View, Text, StyleSheet, Image, Dimensions, TouchableOpacity } from "rea
 import Onboarding from 'react-native-onboarding-swiper';
 import LottieView from 'lottie-react-native';
 import { useNavigation } from "@react-navigation/native";
+import { setItem } from "../utils/asyncStorage";
 
 const { width, height } = Dimensions.get('window');
 
@@ -13,14 +14,12 @@ function OnboardingScreen() {
 
     const handleDone = () => {
         navigation.navigate('login');
-    }
-    const handleSkip = () => {
-        navigation.replace('login');
+        setItem('onboarded', '1');
     }
     const doneButton = () => {
         return (
-            <TouchableOpacity style={{ marginRight: 20 }} onPress={handleDone} >
-                <Text style={{ fontSize: 16, color: '#26469d', fontWeight: 'bold' }}>Done</Text>
+            <TouchableOpacity style={styles.doneButton} onPress={handleDone} >
+                <Text style={{ fontSize: 16, color: '#ffffffff', fontWeight: 'bold' }}>Done</Text>
             </TouchableOpacity>
         )
     }
@@ -30,7 +29,8 @@ function OnboardingScreen() {
 
             <Onboarding
                 onDone={handleDone}
-                onSkip={handleSkip}
+                onSkip={handleDone}
+                bottomBarHighlight={false}
                 DoneButtonComponent={doneButton}
                 containerStyles={{ paddingHorizontal: 15 }}
                 pages={[
@@ -118,5 +118,12 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: '#666',
         textAlign: 'center',
+    },
+    doneButton: {
+        padding: 20,
+        backgroundColor: '#26469d',
+        borderTopLeftRadius: "100%",
+        borderBottomLeftRadius: "100%",
+        color: '#fff',
     },
 }); 
