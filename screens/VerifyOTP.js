@@ -2,15 +2,18 @@ import { StyleSheet, Text, View, TextInput, Pressable } from "react-native"
 import { useState, useRef } from 'react';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useDispatch } from 'react-redux';
-import { setCredentials, setIsAuthenticated } from '../store/authSlice';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { setToken, setIsAuthenticated } from '../store/authSlice';
+import { VerifyOTPUser } from '../utils/auth';
+import { ResendOTP } from '../utils/auth';
 
 function VerifyOTPScreen() {
     const nav = useNavigation();
     const route = useRoute();
     const dispatch = useDispatch();
 
-    // Get phone number from route params or use default
-    const phoneNumber = route.params?.phoneNumber || '+91 9874563210';
+    const email = route.params?.email || 'your email';
+    console.log('Verifying OTP for:', email);
 
     const [otp, setOtp] = useState(['', '', '', '', '', '']);
     const [error, setError] = useState('');
@@ -45,17 +48,15 @@ function VerifyOTPScreen() {
                 return;
             }
             setError('');
+            // Call backend to verify OTP and receive token
+            const response = await VerifyOTPUser(email, otpCode);
 
-            // Add your OTP verification API call here
-            // const response = await VerifyOTP(phoneNumber, otpCode);
-            // dispatch(setCredentials({ token: response.token }));
-            // dispatch(setIsAuthenticated(true));
-
-            alert('OTP verified successfully');
-            nav.navigate('Home');
+            alert('OTP verified successfully. Please login to continue.');
+            nav.navigate('Login', { verified: true });
         } catch (err) {
-            console.error('OTP verification error:', err);
-            setError('Invalid OTP. Please try again.');
+            console.error('OTP verification error:', err.response?.data || err.message || err);
+            const serverMessage = err.response?.data?.message || err.response?.data || err.message;
+            setError(serverMessage || 'Invalid OTP. Please try again.');
         }
     };
 
@@ -80,7 +81,7 @@ function VerifyOTPScreen() {
                 <Text style={styles.title}>Verify OTP!</Text>
                 <View style={styles.subtitleContainer}>
                     <Text style={styles.subtitle}>
-                        Enter the OTP sent to {phoneNumber}
+                        Enter the OTP sent to {email}
                     </Text>
                     <Pressable onPress={() => nav.goBack()}>
                         <Text style={styles.editIcon}>✏️</Text>

@@ -13,7 +13,7 @@ function OnboardingScreen() {
     const navigation = useNavigation();
 
     const handleDone = () => {
-        navigation.navigate('login');
+        navigation.navigate('Login');
         setItem('onboarded', '1');
     }
     const doneButton = () => {

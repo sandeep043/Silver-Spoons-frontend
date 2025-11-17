@@ -1,26 +1,54 @@
 import { StyleSheet, Text, View, TextInput, Pressable } from "react-native"
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { LoginUser } from '../utils/auth';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSelector, useDispatch } from 'react-redux';
 import {
     selectIsAuthenticated,
     selectCurrentToken,
     setCredentials,
-    setIsAuthenticated,
+    setIsAuthenticated, setToken
 } from '../store/authSlice';
+
 import { useNavigation } from '@react-navigation/native';
+import { useRoute } from '@react-navigation/native';
 
 
 function LoginScreen() {
     const nav = useNavigation();
+    const route = useRoute();
+    const [verifiedBanner, setVerifiedBanner] = useState(false);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [showPassword, setShowPassword] = useState(false);
-
-    const isAuthenticated = useSelector(selectIsAuthenticated);
-    const token = useSelector(selectCurrentToken);
+    const { isAuthenticated, token } = useSelector((state) => state.auth)
     const dispatch = useDispatch();
+
+    // Navigate when authentication state changes
+    useEffect(() => {
+        if (isAuthenticated && token) {
+            console.log('Logged in with token:', token);
+            console.log('Is Authenticated:', isAuthenticated);
+            nav.navigate('Home');
+        }
+    }, [isAuthenticated, token]);
+
+    // Show a one-time success banner if navigated here after OTP verification
+    useEffect(() => {
+        const verified = route.params?.verified;
+        if (verified) {
+            setVerifiedBanner(true);
+            // clear the param so banner doesn't reappear on re-render
+            try {
+                nav.setParams({ verified: false });
+            } catch (e) {
+                // ignore if setParams not available
+            }
+            const t = setTimeout(() => setVerifiedBanner(false), 3000);
+            return () => clearTimeout(t);
+        }
+    }, [route.params?.verified]);
 
     const handleLogin = async () => {
         try {
@@ -30,13 +58,16 @@ function LoginScreen() {
             }
             setError('');
             const response = await LoginUser(email, password);
-            dispatch(setCredentials({ token: response.token }));
+            console.log('Login response:', response);
+
+            // Store token in AsyncStorage for persistence
+            await AsyncStorage.setItem('authToken', response.token);
+
+            // Dispatch to Redux store
+            dispatch(setToken(response.token));
             dispatch(setIsAuthenticated(true));
 
             alert('Login successful');
-            nav.navigate('Home');
-            console.log('Logged in with token:', token);
-            console.log('Is Authenticated:', isAuthenticated);
         } catch (err) {
             console.error('Login error:', err);
             setError('Login failed. Please check your credentials and try again.');
@@ -46,6 +77,11 @@ function LoginScreen() {
     return (
         <View style={styles.container}>
             <View style={styles.card}>
+                {verifiedBanner ? (
+                    <View style={styles.banner}>
+                        <Text style={styles.bannerText}>OTP verified — please login</Text>
+                    </View>
+                ) : null}
                 <Text style={styles.title}>Welcome Back!</Text>
                 <Text style={styles.subtitle}>Please login to your account</Text>
 
@@ -90,9 +126,15 @@ function LoginScreen() {
                     <Text style={styles.googleText}>Login with google</Text>
                 </Pressable>
 
-                <Pressable onPress={() => nav.navigate('signUp')}>
+                <Pressable onPress={() => nav.navigate('SignUp')}>
                     <Text style={styles.signupText}>
                         Don't have an account? <Text style={styles.signupLink}>Sign Up</Text>
+                    </Text>
+                </Pressable>
+
+                <Pressable onPress={() => nav.navigate('Home')}>
+                    <Text style={styles.signupText}>
+                        Don't have an account? <Text style={styles.signupLink}>Home</Text>
                     </Text>
                 </Pressable>
             </View>
@@ -218,5 +260,17 @@ const styles = StyleSheet.create({
     signupLink: {
         color: '#ef4444',
         fontWeight: '600',
+    },
+    banner: {
+        backgroundColor: '#064e3b',
+        paddingVertical: 8,
+        paddingHorizontal: 12,
+        borderRadius: 8,
+        marginBottom: 12,
+        alignSelf: 'center',
+    },
+    bannerText: {
+        color: '#bbf7d0',
+        fontSize: 13,
     },
 });

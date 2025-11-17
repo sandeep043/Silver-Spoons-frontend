@@ -18,14 +18,17 @@ const authSlice = createSlice({
         },
         setIsAuthenticated: (state, action) => {
             state.isAuthenticated = action.payload;
+        },
+        setToken: (state, action) => {
+            state.token = action.payload;
         }
     },
 });
 
-export const { setCredentials, logout, setIsAuthenticated } = authSlice.actions;
+export const { setCredentials, logout, setIsAuthenticated, setToken } = authSlice.actions;
 
 export default authSlice.reducer;
 
 // Selectors
-export const selectCurrentToken = (state) => state.auth.token;
-export const selectIsAuthenticated = (state) => state.auth.isAuthenticated;
+// export const selectCurrentToken = (state) => state.auth.token;
+// export const selectIsAuthenticated = (state) => state.auth.isAuthenticated;

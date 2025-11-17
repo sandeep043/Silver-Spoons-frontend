@@ -1,26 +1,648 @@
-import React from 'react'
-import { Text, TouchableOpacity, View, StyleSheet } from 'react-native'
-import { setItem } from '../utils/asyncStorage'
+import { StyleSheet, Text, View, TextInput, Pressable, ScrollView, Image, TouchableOpacity } from "react-native"
+import { useState } from 'react';
+import { useNavigation } from '@react-navigation/native';
+import { setItem } from "../utils/asyncStorage";
 
 function HomeScreen() {
+    const nav = useNavigation();
+    const [selectedCategory, setSelectedCategory] = useState('Frequent order');
     const rest = () => {
         setItem('onboarded', '0');
     }
+    const categories = [
+        'Frequent order', 'Veg', 'Fish', 'Egg', 'Chicken', 'Egg', 'Mix'
+    ];
+
+    const menuCategories = [
+        { id: 1, name: 'Meals', icon: '🍱' },
+        { id: 2, name: 'Chicken', icon: '🍗' },
+        { id: 3, name: 'Biryani', icon: '🍛' },
+        { id: 4, name: 'Breakfast', icon: '🥞' },
+        { id: 5, name: 'Fish', icon: '🐟' },
+        { id: 6, name: 'Biryani', icon: '🍚' },
+        { id: 7, name: 'Veg Rice', icon: '🍚' },
+        { id: 8, name: 'Meals', icon: '🍱' },
+    ];
+
+    const frequentOrders = [
+        {
+            id: 1,
+            name: 'Plain Dosa',
+            rating: '4.5',
+            time: '30 min',
+            price: '₹ 80',
+            image: 'https://images.unsplash.com/photo-1694809434016-0c2e94b1d0c7?w=400'
+        },
+        {
+            id: 2,
+            name: 'Kuzhipaniyaram',
+            rating: '4.5',
+            time: '30 min',
+            price: '₹ 80',
+            image: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?w=400'
+        },
+    ];
+
+    const combinationBreakfast = [
+        {
+            id: 1,
+            name: 'Appam & Stew - 2 nos',
+            rating: '4.5',
+            time: '30 min',
+            price: '₹ 180',
+            image: 'https://images.unsplash.com/photo-1668236543090-82eba5ee5976?w=400'
+        },
+        {
+            id: 2,
+            name: 'Idiyappam & Kadala curry - 4 nos',
+            rating: '4.5',
+            time: '30 min',
+            price: '₹ 180',
+            image: 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=400'
+        },
+        {
+            id: 3,
+            name: 'Puttu & Kadala curry - 2 nos',
+            rating: '4.5',
+            time: '30 min',
+            price: '₹ 180',
+            image: 'https://images.unsplash.com/photo-1589301773859-601c2fe8b02b?w=400'
+        },
+        {
+            id: 4,
+            name: 'Poori Masala - 2 nos',
+            rating: '4.5',
+            time: '30 min',
+            price: '₹ 180',
+            image: 'https://images.unsplash.com/photo-1642192637672-d4e7b2c60b74?w=400'
+        },
+        {
+            id: 5,
+            name: 'Idli & Sambar - 4 nos',
+            rating: '4.5',
+            time: '30 min',
+            price: '₹ 180',
+            image: 'https://images.unsplash.com/photo-1630383249896-424e482df921?w=400'
+        },
+    ];
+
+    const recommendedBreakfast = [
+        {
+            id: 1,
+            name: 'Plain Dosa - 2 nos',
+            price: '₹ 180',
+            rating: '4.5',
+            time: '30 min',
+            image: 'https://images.unsplash.com/photo-1694809434016-0c2e94b1d0c7?w=400'
+        },
+        {
+            id: 2,
+            name: 'Puttu and Kadala',
+            price: '₹ 180',
+            rating: '4.5',
+            time: '30 min',
+            image: 'https://images.unsplash.com/photo-1589301773859-601c2fe8b02b?w=400'
+        },
+    ];
 
     return (
-        <View style={styles.container} ><Text>hello from HOME Screen</Text>
-            <TouchableOpacity onPress={rest} ><Text>rest</Text></TouchableOpacity></View>
-    )
+        <View style={styles.container}>
+            {/* Header */}
+            <View style={styles.header}>
+                <Pressable style={styles.headerLeft} onPress={() => nav.navigate('Profile')}>
+                    <Image
+                        source={{ uri: 'https://i.pravatar.cc/100' }}
+                        style={styles.avatar}
+                    />
+                    <View>
+                        <Text style={styles.deliverTo}>Deliver To</Text>
+                        <Text style={styles.location}>Palazhi , Calicut</Text>
+                    </View>
+                </Pressable>
+                <Pressable style={styles.notificationIcon}>
+                    <Text style={styles.bellIcon}>🔔</Text>
+                </Pressable>
+            </View>
+
+            <ScrollView showsVerticalScrollIndicator={false}>
+                {/* Search Bar */}
+                <View style={styles.searchContainer}>
+                    <TextInput
+                        style={styles.searchInput}
+                        placeholder="Search"
+                        placeholderTextColor="#6b7280"
+                    />
+                    <Pressable style={styles.searchIcon}>
+                        <Text>🔍</Text>
+                    </Pressable>
+                </View>
+
+                {/* Banner */}
+                <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    style={styles.bannerContainer}
+                >
+                    <View style={styles.banner}>
+                        <View style={styles.bannerContent}>
+                            <Text style={styles.bannerDiscount}>GET{'\n'}10% OFF</Text>
+                            <Text style={styles.bannerWelcome}>WELCOME BACK</Text>
+                            <Pressable style={styles.orderButton}>
+                                <Text style={styles.orderButtonText}>ORDER NOW</Text>
+                            </Pressable>
+                        </View>
+                        <Image
+                            source={{ uri: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400' }}
+                            style={styles.bannerImage}
+                        />
+                    </View>
+                    <View style={[styles.banner, styles.banner2]}>
+                        <Image
+                            source={{ uri: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=400' }}
+                            style={styles.bannerImageFull}
+                        />
+                    </View>
+                </ScrollView>
+
+                {/* Banner Dots */}
+                <View style={styles.dotsContainer}>
+                    <View style={[styles.dot, styles.dotActive]} />
+                    <View style={styles.dot} />
+                    <View style={styles.dot} />
+                    <View style={styles.dot} />
+                </View>
+
+                {/* Categories Tabs */}
+                <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    style={styles.categoriesContainer}
+                >
+                    {categories.map((category, index) => (
+                        <Pressable
+                            key={index}
+                            style={[
+                                styles.categoryTab,
+                                selectedCategory === category && styles.categoryTabActive
+                            ]}
+                            onPress={() => setSelectedCategory(category)}
+                        >
+                            <Text style={[
+                                styles.categoryText,
+                                selectedCategory === category && styles.categoryTextActive
+                            ]}>
+                                {category}
+                            </Text>
+                        </Pressable>
+                    ))}
+                </ScrollView>
+
+                {/* Frequent Orders */}
+                <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    style={styles.frequentOrdersContainer}
+                >
+                    {frequentOrders.map((item) => (
+                        <View key={item.id} style={styles.foodCard}>
+                            <Image source={{ uri: item.image }} style={styles.foodImage} />
+                            <Text style={styles.foodName}>{item.name}</Text>
+                            <View style={styles.foodInfo}>
+                                <Text style={styles.rating}>⭐ {item.rating}</Text>
+                                <Text style={styles.time}>🕐 {item.time}</Text>
+                            </View>
+                            <View style={styles.foodFooter}>
+                                <Text style={styles.price}>{item.price}</Text>
+                                <Pressable style={styles.addButton}>
+                                    <Text style={styles.addButtonText}>+</Text>
+                                </Pressable>
+                            </View>
+                        </View>
+                    ))}
+                </ScrollView>
+
+                {/* Menu Categories Grid */}
+                <View style={styles.menuGrid}>
+                    {menuCategories.map((item) => (
+                        <Pressable key={item.id} style={styles.menuItem}>
+                            <View style={styles.menuIconContainer}>
+                                <Text style={styles.menuIcon}>{item.icon}</Text>
+                            </View>
+                            <Text style={styles.menuText}>{item.name}</Text>
+                        </Pressable>
+                    ))}
+                </View>
+
+                {/* Combination Breakfast */}
+                <Text style={styles.sectionTitle}>Combination Breakfast</Text>
+                {combinationBreakfast.map((item) => (
+                    <View key={item.id} style={styles.listCard}>
+                        <Image source={{ uri: item.image }} style={styles.listImage} />
+                        <View style={styles.listContent}>
+                            <Text style={styles.listName}>{item.name}</Text>
+                            <View style={styles.listInfo}>
+                                <Text style={styles.listRating}>⭐ {item.rating}</Text>
+                                <Text style={styles.listTime}>🕐 {item.time}</Text>
+                            </View>
+                            <Text style={styles.listPrice}>{item.price}</Text>
+                        </View>
+                        <Pressable style={styles.listAddButton}>
+                            <Text style={styles.listAddButtonText}>+</Text>
+                        </Pressable>
+                    </View>
+                ))}
+
+                {/* Recommended Breakfast */}
+                <Text style={styles.sectionTitle}>Recommended Breakfast</Text>
+                <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    style={styles.recommendedContainer}
+                >
+                    {recommendedBreakfast.map((item) => (
+                        <View key={item.id} style={styles.recommendedCard}>
+                            <Image source={{ uri: item.image }} style={styles.recommendedImage} />
+                            <Text style={styles.recommendedName}>{item.name}</Text>
+                            <View style={styles.recommendedInfo}>
+                                <Text style={styles.recommendedRating}>⭐ {item.rating}</Text>
+                                <Text style={styles.recommendedTime}>🕐 {item.time}</Text>
+                            </View>
+                            <View style={styles.recommendedFooter}>
+                                <Text style={styles.recommendedPrice}>{item.price}</Text>
+                                <Pressable style={styles.recommendedAddButton}>
+                                    <Text style={styles.recommendedAddButtonText}>+</Text>
+                                </Pressable>
+                            </View>
+                        </View>
+                    ))}
+                </ScrollView>
+
+                <View style={{ height: 100 }} />
+
+            </ScrollView>
+            <TouchableOpacity onPress={rest} ><Text style={{ color: 'white' }} >rest</Text></TouchableOpacity>
+        </View>
+    );
 }
 
-export default HomeScreen
+export default HomeScreen;
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#ffffffff',
+        backgroundColor: '#0a0a0a',
+    },
+    header: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: 16,
+        paddingTop: 50,
+        paddingBottom: 16,
+    },
+    headerLeft: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 12,
+    },
+    avatar: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+    },
+    deliverTo: {
+        fontSize: 12,
+        color: '#6b7280',
+    },
+    location: {
+        fontSize: 14,
+        color: '#ffffff',
+        fontWeight: '600',
+    },
+    notificationIcon: {
+        width: 40,
+        height: 40,
         justifyContent: 'center',
         alignItems: 'center',
-        paddingHorizontal: 20,
+    },
+    bellIcon: {
+        fontSize: 20,
+    },
+    searchContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginHorizontal: 16,
+        marginVertical: 16,
+        backgroundColor: '#1a1a1a',
+        borderRadius: 12,
+        paddingHorizontal: 16,
+    },
+    searchInput: {
+        flex: 1,
+        paddingVertical: 12,
+        color: '#ffffff',
+        fontSize: 14,
+    },
+    searchIcon: {
+        padding: 8,
+    },
+    bannerContainer: {
+        marginBottom: 12,
+    },
+    banner: {
+        marginHorizontal: 16,
+        backgroundColor: '#1b5e20',
+        borderRadius: 16,
+        padding: 20,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        width: 320,
+        height: 160,
+    },
+    banner2: {
+        backgroundColor: '#1e3a8a',
+    },
+    bannerContent: {
+        flex: 1,
+    },
+    bannerDiscount: {
+        fontSize: 24,
+        fontWeight: '700',
+        color: '#ffffff',
+        marginBottom: 8,
+    },
+    bannerWelcome: {
+        fontSize: 12,
+        color: '#ffffff',
+        marginBottom: 12,
+    },
+    orderButton: {
+        backgroundColor: '#000000',
+        paddingVertical: 6,
+        paddingHorizontal: 16,
+        borderRadius: 20,
+        alignSelf: 'flex-start',
+    },
+    orderButtonText: {
+        color: '#ffffff',
+        fontSize: 10,
+        fontWeight: '600',
+    },
+    bannerImage: {
+        width: 100,
+        height: 100,
+        borderRadius: 12,
+    },
+    bannerImageFull: {
+        width: 320,
+        height: 160,
+        borderRadius: 16,
+        position: 'absolute',
+    },
+    dotsContainer: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        gap: 6,
+        marginBottom: 20,
+    },
+    dot: {
+        width: 6,
+        height: 6,
+        borderRadius: 3,
+        backgroundColor: '#374151',
+    },
+    dotActive: {
+        backgroundColor: '#ffffff',
+    },
+    categoriesContainer: {
+        marginBottom: 20,
+        paddingHorizontal: 16,
+    },
+    categoryTab: {
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        marginRight: 12,
+        borderRadius: 20,
+        backgroundColor: 'transparent',
+    },
+    categoryTabActive: {
+        backgroundColor: '#1a1a1a',
+    },
+    categoryText: {
+        fontSize: 14,
+        color: '#6b7280',
+    },
+    categoryTextActive: {
+        color: '#ffffff',
+        fontWeight: '600',
+    },
+    frequentOrdersContainer: {
+        marginBottom: 24,
+        paddingHorizontal: 16,
+    },
+    foodCard: {
+        width: 160,
+        marginRight: 16,
+        backgroundColor: '#1a1a1a',
+        borderRadius: 16,
+        padding: 12,
+    },
+    foodImage: {
+        width: '100%',
+        height: 120,
+        borderRadius: 12,
+        marginBottom: 8,
+    },
+    foodName: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#ffffff',
+        marginBottom: 4,
+    },
+    foodInfo: {
+        flexDirection: 'row',
+        gap: 12,
+        marginBottom: 8,
+    },
+    rating: {
+        fontSize: 12,
+        color: '#9ca3af',
+    },
+    time: {
+        fontSize: 12,
+        color: '#9ca3af',
+    },
+    foodFooter: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    price: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#ffffff',
+    },
+    addButton: {
+        width: 28,
+        height: 28,
+        backgroundColor: '#16a34a',
+        borderRadius: 6,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    addButtonText: {
+        fontSize: 18,
+        color: '#ffffff',
+        fontWeight: '600',
+    },
+    menuGrid: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        paddingHorizontal: 16,
+        marginBottom: 24,
+        gap: 16,
+    },
+    menuItem: {
+        width: '22%',
+        alignItems: 'center',
+    },
+    menuIconContainer: {
+        width: 60,
+        height: 60,
+        borderRadius: 30,
+        backgroundColor: '#1a1a1a',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 8,
+    },
+    menuIcon: {
+        fontSize: 28,
+    },
+    menuText: {
+        fontSize: 12,
+        color: '#ffffff',
+        textAlign: 'center',
+    },
+    sectionTitle: {
+        fontSize: 18,
+        fontWeight: '600',
+        color: '#ffffff',
+        paddingHorizontal: 16,
+        marginBottom: 16,
+    },
+    listCard: {
+        flexDirection: 'row',
+        marginHorizontal: 16,
+        marginBottom: 16,
+        backgroundColor: '#1a1a1a',
+        borderRadius: 16,
+        padding: 12,
+        alignItems: 'center',
+    },
+    listImage: {
+        width: 80,
+        height: 80,
+        borderRadius: 12,
+        marginRight: 12,
+    },
+    listContent: {
+        flex: 1,
+    },
+    listName: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#ffffff',
+        marginBottom: 4,
+    },
+    listInfo: {
+        flexDirection: 'row',
+        gap: 12,
+        marginBottom: 4,
+    },
+    listRating: {
+        fontSize: 11,
+        color: '#9ca3af',
+    },
+    listTime: {
+        fontSize: 11,
+        color: '#9ca3af',
+    },
+    listPrice: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#ffffff',
+    },
+    listAddButton: {
+        width: 28,
+        height: 28,
+        backgroundColor: '#16a34a',
+        borderRadius: 6,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    listAddButtonText: {
+        fontSize: 18,
+        color: '#ffffff',
+        fontWeight: '600',
+    },
+    recommendedContainer: {
+        marginBottom: 24,
+        paddingHorizontal: 16,
+    },
+    recommendedCard: {
+        width: 140,
+        marginRight: 16,
+        backgroundColor: '#1a1a1a',
+        borderRadius: 16,
+        padding: 12,
+    },
+    recommendedImage: {
+        width: '100%',
+        height: 100,
+        borderRadius: 12,
+        marginBottom: 8,
+    },
+    recommendedName: {
+        fontSize: 13,
+        fontWeight: '600',
+        color: '#ffffff',
+        marginBottom: 4,
+    },
+    recommendedInfo: {
+        flexDirection: 'row',
+        gap: 8,
+        marginBottom: 8,
+    },
+    recommendedRating: {
+        fontSize: 11,
+        color: '#9ca3af',
+    },
+    recommendedTime: {
+        fontSize: 11,
+        color: '#9ca3af',
+    },
+    recommendedFooter: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    recommendedPrice: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#ffffff',
+    },
+    recommendedAddButton: {
+        width: 24,
+        height: 24,
+        backgroundColor: '#16a34a',
+        borderRadius: 6,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    recommendedAddButtonText: {
+        fontSize: 16,
+        color: '#ffffff',
+        fontWeight: '600',
     },
 });

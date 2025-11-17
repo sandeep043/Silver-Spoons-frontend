@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { useDispatch } from 'react-redux';
 import { setCredentials, setIsAuthenticated } from '../store/authSlice';
+import { SignUpUser } from '../utils/auth';
 
 function SignUpScreen() {
     const nav = useNavigation();
@@ -23,16 +24,17 @@ function SignUpScreen() {
             }
             setError('');
 
-            // Add your signup API call here
-            // const response = await SignUpUser(fullName, email, phoneNumber, password);
-            // dispatch(setCredentials({ token: response.token }));
-            // dispatch(setIsAuthenticated(true));
+            const response = await SignUpUser(fullName, email, phoneNumber, password);
+            console.log('Sign up response:', response);
 
-            alert('Sign up successful');
-            nav.navigate('Home');
+            nav.navigate('VerifyOTP', { email: email });
+
+
+
+
         } catch (err) {
             console.error('Sign up error:', err);
-            setError('Sign up failed. Please try again.');
+            setError(`Sign up failed.${err} Please try again.`);
         }
     };
 
