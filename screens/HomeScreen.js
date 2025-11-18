@@ -2,16 +2,37 @@ import { StyleSheet, Text, View, TextInput, Pressable, ScrollView, Image, Toucha
 import { useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { setItem } from "../utils/asyncStorage";
+import Carousel from "../components/Carousel";
+import ProductMenu from "../components/ProductMenu";
+import { useEffect } from "react";
+
+import biryaniImage from '../assets/offere banners/biryani combo.png';
+import welcomeBackImage from '../assets/offere banners/welcomeBack.png';
+
+import { getAllCategories } from "../utils/productFetch";
 
 function HomeScreen() {
     const nav = useNavigation();
-    const [selectedCategory, setSelectedCategory] = useState('Frequent order');
+    const [selectedCategory, setSelectedCategory] = useState('');
+    const [categories, setCategories] = useState([]);
+
     const rest = () => {
         setItem('onboarded', '0');
     }
-    const categories = [
-        'Frequent order', 'Veg', 'Fish', 'Egg', 'Chicken', 'Egg', 'Mix'
-    ];
+    // const categories = [
+    //     'Veg', 'Fish', 'Egg', 'Chicken', 'Main Course', 'Mix'
+    // ];  
+
+    const getCategories = async () => {
+        const response = await getAllCategories();
+        setCategories(response);
+
+    }
+
+
+    useEffect(() => {
+        getCategories();
+    }, [])
 
     const menuCategories = [
         { id: 1, name: 'Meals', icon: '🍱' },
@@ -24,24 +45,7 @@ function HomeScreen() {
         { id: 8, name: 'Meals', icon: '🍱' },
     ];
 
-    const frequentOrders = [
-        {
-            id: 1,
-            name: 'Plain Dosa',
-            rating: '4.5',
-            time: '30 min',
-            price: '₹ 80',
-            image: 'https://images.unsplash.com/photo-1694809434016-0c2e94b1d0c7?w=400'
-        },
-        {
-            id: 2,
-            name: 'Kuzhipaniyaram',
-            rating: '4.5',
-            time: '30 min',
-            price: '₹ 80',
-            image: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?w=400'
-        },
-    ];
+
 
     const combinationBreakfast = [
         {
@@ -137,40 +141,25 @@ function HomeScreen() {
                     </Pressable>
                 </View>
 
-                {/* Banner */}
-                <ScrollView
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    style={styles.bannerContainer}
-                >
-                    <View style={styles.banner}>
-                        <View style={styles.bannerContent}>
-                            <Text style={styles.bannerDiscount}>GET{'\n'}10% OFF</Text>
-                            <Text style={styles.bannerWelcome}>WELCOME BACK</Text>
-                            <Pressable style={styles.orderButton}>
-                                <Text style={styles.orderButtonText}>ORDER NOW</Text>
-                            </Pressable>
+                {/* Banner Carousel */}
+                <View style={styles.bannerWrapper}>
+                    <Carousel dotCount={2}>
+                        <View style={[styles.banner, styles.banner2]}>
+                            <Image
+                                source={welcomeBackImage}
+                                style={styles.bannerImageFull}
+                            />
                         </View>
-                        <Image
-                            source={{ uri: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400' }}
-                            style={styles.bannerImage}
-                        />
-                    </View>
-                    <View style={[styles.banner, styles.banner2]}>
-                        <Image
-                            source={{ uri: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=400' }}
-                            style={styles.bannerImageFull}
-                        />
-                    </View>
-                </ScrollView>
 
-                {/* Banner Dots */}
-                <View style={styles.dotsContainer}>
-                    <View style={[styles.dot, styles.dotActive]} />
-                    <View style={styles.dot} />
-                    <View style={styles.dot} />
-                    <View style={styles.dot} />
+                        <View style={[styles.banner, styles.banner2]}>
+                            <Image
+                                source={biryaniImage}
+                                style={styles.bannerImageFull}
+                            />
+                        </View>
+                    </Carousel>
                 </View>
+
 
                 {/* Categories Tabs */}
                 <ScrollView
@@ -181,10 +170,7 @@ function HomeScreen() {
                     {categories.map((category, index) => (
                         <Pressable
                             key={index}
-                            style={[
-                                styles.categoryTab,
-                                selectedCategory === category && styles.categoryTabActive
-                            ]}
+                            style={styles.categoryTab}
                             onPress={() => setSelectedCategory(category)}
                         >
                             <Text style={[
@@ -193,45 +179,15 @@ function HomeScreen() {
                             ]}>
                                 {category}
                             </Text>
+                            {selectedCategory === category && (
+                                <View style={styles.categoryUnderline} />
+                            )}
                         </Pressable>
                     ))}
                 </ScrollView>
 
-                {/* Frequent Orders */}
-                <ScrollView
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    style={styles.frequentOrdersContainer}
-                >
-                    {frequentOrders.map((item) => (
-                        <View key={item.id} style={styles.foodCard}>
-                            <Image source={{ uri: item.image }} style={styles.foodImage} />
-                            <Text style={styles.foodName}>{item.name}</Text>
-                            <View style={styles.foodInfo}>
-                                <Text style={styles.rating}>⭐ {item.rating}</Text>
-                                <Text style={styles.time}>🕐 {item.time}</Text>
-                            </View>
-                            <View style={styles.foodFooter}>
-                                <Text style={styles.price}>{item.price}</Text>
-                                <Pressable style={styles.addButton}>
-                                    <Text style={styles.addButtonText}>+</Text>
-                                </Pressable>
-                            </View>
-                        </View>
-                    ))}
-                </ScrollView>
-
-                {/* Menu Categories Grid */}
-                <View style={styles.menuGrid}>
-                    {menuCategories.map((item) => (
-                        <Pressable key={item.id} style={styles.menuItem}>
-                            <View style={styles.menuIconContainer}>
-                                <Text style={styles.menuIcon}>{item.icon}</Text>
-                            </View>
-                            <Text style={styles.menuText}>{item.name}</Text>
-                        </Pressable>
-                    ))}
-                </View>
+                {/* Product menu (Frequent Orders + Menu Grid) */}
+                <ProductMenu selectedCategory={selectedCategory} />
 
                 {/* Combination Breakfast */}
                 <Text style={styles.sectionTitle}>Combination Breakfast</Text>
@@ -349,16 +305,19 @@ const styles = StyleSheet.create({
     bannerContainer: {
         marginBottom: 12,
     },
+    bannerWrapper: {
+        height: 200,
+        marginBottom: 8,
+    },
     banner: {
         marginHorizontal: 16,
-        backgroundColor: '#1b5e20',
         borderRadius: 16,
         padding: 20,
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
         width: 320,
-        height: 160,
+        height: 200,
     },
     banner2: {
         backgroundColor: '#1e3a8a',
@@ -396,7 +355,7 @@ const styles = StyleSheet.create({
     },
     bannerImageFull: {
         width: 320,
-        height: 160,
+        height: 200,
         borderRadius: 16,
         position: 'absolute',
     },
@@ -426,8 +385,14 @@ const styles = StyleSheet.create({
         borderRadius: 20,
         backgroundColor: 'transparent',
     },
-    categoryTabActive: {
-        backgroundColor: '#1a1a1a',
+    categoryTabActive: {},
+    categoryUnderline: {
+        height: 3,
+        width: 38,
+        backgroundColor: '#f70808',
+        borderRadius: 2,
+        marginTop: 6,
+        alignSelf: 'center'
     },
     categoryText: {
         fontSize: 14,

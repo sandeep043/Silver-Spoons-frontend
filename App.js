@@ -163,6 +163,7 @@ function RootNavigator() {
         ) : (
           // User is not logged in - show Login/SignUp screens
           <Stack.Navigator initialRouteName='Login'>
+            <Stack.Screen name="Home" options={{ headerShown: false }} component={HomeTabs} />
             <Stack.Screen name="Login" options={{ headerShown: false }} component={LoginScreen} />
             <Stack.Screen name="SignUp" options={{ headerShown: false }} component={SignUpScreen} />
             <Stack.Screen name="VerifyOTP" options={{ headerShown: false }} component={VerifyOTPScreen} />
