@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { View, ScrollView, Text, Pressable, Image, StyleSheet } from "react-native";
+import { View, ScrollView, Text, Pressable, Image, StyleSheet, ImageBackground } from "react-native";
 import ShimmerPlaceHolder from "react-native-shimmer-placeholder";
 import { productFetchOnCategory } from "../utils/productFetch";
+import { addItemToCart } from "../utils/cartFetch";
+import { useSelector } from "react-redux";
 
 function ProductMenu({ selectedCategory: selectedCategoryProp }) {
     const [selectedCategory, setSelectedCategory] = useState('Veg');
@@ -14,17 +16,15 @@ function ProductMenu({ selectedCategory: selectedCategoryProp }) {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
+    const { token } = useSelector((state) => state.auth);
 
-    const menuCategories = [
-        { id: 1, name: 'Meals', icon: '🍱' },
-        { id: 2, name: 'Chicken', icon: '🍗' },
-        { id: 3, name: 'Biryani', icon: '🍛' },
-        { id: 4, name: 'Breakfast', icon: '🥞' },
-        { id: 5, name: 'Fish', icon: '🐟' },
-        { id: 6, name: 'Biryani', icon: '🍚' },
-        { id: 7, name: 'Veg Rice', icon: '🍚' },
-        { id: 8, name: 'Meals', icon: '🍱' },
-    ];
+
+    const handleAddCart = async (item) => {
+
+        const response = await addItemToCart(item, token, 1);
+        console.log('Add to cart response:', response);
+
+    }
 
     const orderData = async (category) => {
         setLoading(true);
@@ -33,7 +33,7 @@ function ProductMenu({ selectedCategory: selectedCategoryProp }) {
             const res = await productFetchOnCategory(category);
             const products = res?.data ?? res?.products ?? res ?? [];
             setFrequentOrders(Array.isArray(products) ? products : []);
-            console.log('Fetched products for category', category, products);
+
         } catch (err) {
             console.error('product fetch error', err);
             setError('Failed to load products');
@@ -74,34 +74,32 @@ function ProductMenu({ selectedCategory: selectedCategoryProp }) {
             ) : (
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} style={localStyles.frequentOrdersContainer}>
                     {frequentOrders.map((item) => (
-                        <View key={item.id} style={localStyles.foodCard}>
-                            <Image source={{ uri: item.ImageUrl }} style={localStyles.foodImage} />
-                            <Text style={localStyles.foodName}>{item.name}</Text>
-                            <View style={localStyles.foodInfo}>
-                                <Text style={localStyles.rating}>⭐ {item.rating}</Text>
-                                <Text style={localStyles.time}>🕐 {item.time}</Text>
-                            </View>
-                            <View style={localStyles.foodFooter}>
-                                <Text style={localStyles.price}>{item.price}</Text>
-                                <Pressable style={localStyles.addButton}>
-                                    <Text style={localStyles.addButtonText}>+</Text>
-                                </Pressable>
-                            </View>
+                        <View key={item._id} style={localStyles.foodCard}>
+                            <ImageBackground source={{ uri: item.ImageUrl }} style={localStyles.foodImage} imageStyle={{ borderRadius: 18 }}>
+                                <View style={localStyles.dumiContainer}></View>
+                                <View style={localStyles.foodInfoContainer}>
+                                    <View>
+                                        <Text style={localStyles.foodName}>{item.name}</Text>
+                                        <View style={localStyles.foodInfo}>
+                                            <Text style={localStyles.rating}>⭐ {item.rating}</Text>
+                                            <Text style={localStyles.time}>🕐 {item.time}</Text>
+                                        </View>
+                                    </View>
+                                    <View style={localStyles.foodFooter}>
+                                        <Text style={localStyles.price}>{item.price}</Text>
+                                        <Pressable onPress={() => handleAddCart(item)} style={localStyles.addButton}>
+                                            <Text style={localStyles.addButtonText}>+</Text>
+                                        </Pressable>
+                                    </View>
+                                </View>
+                            </ImageBackground>
+
+
                         </View>
                     ))}
                 </ScrollView>
             )}
 
-            <View style={localStyles.menuGrid}>
-                {menuCategories.map((item) => (
-                    <Pressable key={item.id} style={localStyles.menuItem}>
-                        <View style={localStyles.menuIconContainer}>
-                            <Text style={localStyles.menuIcon}>{item.icon}</Text>
-                        </View>
-                        <Text style={localStyles.menuText}>{item.name}</Text>
-                    </Pressable>
-                ))}
-            </View>
         </View>
     );
 }
@@ -116,8 +114,9 @@ const localStyles = StyleSheet.create({
     categoryText: { color: '#9ca3af' },
     categoryTextActive: { color: '#ffffff', fontWeight: '600' },
     frequentOrdersContainer: { paddingHorizontal: 12 },
-    foodCard: { width: 160, marginRight: 12, backgroundColor: '#1a1a1a', borderRadius: 12, padding: 8 },
-    foodImage: { width: '100%', height: 100, borderRadius: 8, marginBottom: 8 },
+    foodCard: { width: 160, backgroundColor: '#131010ff', height: 250, marginRight: 12, borderRadius: 18 },
+    foodImage: { width: '100%', height: 200, borderRadius: 18, marginBottom: 8, display: 'flex', flexDirection: "column", justifyContent: 'flex-end' },
+    foodInfoContainer: { flex: 1, paddingTop: 12, paddingLeft: 12, paddingRight: 12, backgroundColor: 'rgba(20, 18, 18, 0.7)', borderTopRightRadius: 30, borderTopLeftRadius: 30 },
     foodName: { color: '#ffffff', fontWeight: '600', marginBottom: 6 },
     foodInfo: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
     rating: { color: '#9ca3af', fontSize: 12 },
@@ -133,4 +132,5 @@ const localStyles = StyleSheet.create({
     menuText: { color: '#ffffff', fontSize: 12, textAlign: 'center' },
     emptyText: { color: '#9ca3af', textAlign: 'center', paddingVertical: 12 },
     errorText: { color: '#ef4444', textAlign: 'center', paddingVertical: 12 },
+    dumiContainer: { height: 40, flex: 3 },
 });

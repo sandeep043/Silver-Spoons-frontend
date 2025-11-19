@@ -7,7 +7,7 @@ import {
     selectIsAuthenticated,
     selectCurrentToken,
     setCredentials,
-    setIsAuthenticated, setToken
+    setIsAuthenticated, setToken, setUserId
 } from '../store/authSlice';
 
 import { useNavigation } from '@react-navigation/native';
@@ -22,7 +22,7 @@ function LoginScreen() {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [showPassword, setShowPassword] = useState(false);
-    const { isAuthenticated, token } = useSelector((state) => state.auth)
+    const { isAuthenticated, token, userId } = useSelector((state) => state.auth)
     const dispatch = useDispatch();
 
     // Navigate when authentication state changes
@@ -30,6 +30,7 @@ function LoginScreen() {
         if (isAuthenticated && token) {
             console.log('Logged in with token:', token);
             console.log('Is Authenticated:', isAuthenticated);
+            console.log('User ID:', userId);
             nav.navigate('Home');
         }
     }, [isAuthenticated, token]);
@@ -64,8 +65,10 @@ function LoginScreen() {
             await AsyncStorage.setItem('authToken', response.token);
 
             // Dispatch to Redux store
+
             dispatch(setToken(response.token));
             dispatch(setIsAuthenticated(true));
+            dispatch(setUserId(response.user._id));
 
             alert('Login successful');
         } catch (err) {

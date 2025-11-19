@@ -1,5 +1,7 @@
 import { StyleSheet, Text, View, TextInput, Pressable, ScrollView, Image, TouchableOpacity } from "react-native"
 import { useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchCategories, selectCategories } from '../store/categoriesSlice';
 import { useNavigation } from '@react-navigation/native';
 import { setItem } from "../utils/asyncStorage";
 import Carousel from "../components/Carousel";
@@ -13,38 +15,17 @@ import { getAllCategories } from "../utils/productFetch";
 
 function HomeScreen() {
     const nav = useNavigation();
-    const [selectedCategory, setSelectedCategory] = useState('');
-    const [categories, setCategories] = useState([]);
+    const [selectedCategory, setSelectedCategory] = useState('Beverages');
+    const dispatch = useDispatch();
+    const categories = useSelector(selectCategories) ?? [];
 
     const rest = () => {
         setItem('onboarded', '0');
     }
-    // const categories = [
-    //     'Veg', 'Fish', 'Egg', 'Chicken', 'Main Course', 'Mix'
-    // ];  
-
-    const getCategories = async () => {
-        const response = await getAllCategories();
-        setCategories(response);
-
-    }
-
 
     useEffect(() => {
-        getCategories();
-    }, [])
-
-    const menuCategories = [
-        { id: 1, name: 'Meals', icon: '🍱' },
-        { id: 2, name: 'Chicken', icon: '🍗' },
-        { id: 3, name: 'Biryani', icon: '🍛' },
-        { id: 4, name: 'Breakfast', icon: '🥞' },
-        { id: 5, name: 'Fish', icon: '🐟' },
-        { id: 6, name: 'Biryani', icon: '🍚' },
-        { id: 7, name: 'Veg Rice', icon: '🍚' },
-        { id: 8, name: 'Meals', icon: '🍱' },
-    ];
-
+        dispatch(fetchCategories());
+    }, [dispatch])
 
 
     const combinationBreakfast = [

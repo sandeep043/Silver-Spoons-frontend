@@ -27,7 +27,7 @@ const getAllCategories = async () => {
         const response = await axios.get(`http://10.0.2.2:4000/api/products/categories`, {
             headers: { 'Content-Type': 'application/json' },
         });
-        console.log('Fetched categories:', response.data.data);
+
         return response.data.data;
     } catch (error) {
         console.error('getAllCategories error:', error.response?.data || error.message || error);
@@ -35,4 +35,51 @@ const getAllCategories = async () => {
     }
 };
 
-export { productFetchOnCategory, getAllCategories };
+/**
+ * Search products with flexible filters.
+ * options: { query, type, category, minPrice, maxPrice, page, limit, sortBy, order }
+ * Returns: { products: Array, meta: { total, page, limit } }
+ */
+const searchProducts = async (options = {}) => {
+    try {
+        const params = {};
+        const {
+            query,
+            type,
+            category,
+            minPrice,
+            maxPrice,
+            page,
+            limit,
+            sortBy,
+            order,
+        } = options;
+
+        if (query) params.query = query;
+        if (type) params.type = type;
+        if (category) params.category = category;
+        if (minPrice != null) params.minPrice = minPrice;
+        if (maxPrice != null) params.maxPrice = maxPrice;
+        if (page != null) params.page = page;
+        if (limit != null) params.limit = limit;
+        if (sortBy) params.sortBy = sortBy;
+        if (order) params.order = order;
+
+        console.log('Searching products with params:', params);
+        const response = await axios.get(`http://10.0.2.2:4000/api/products/search`, {
+            params,
+            headers: { 'Content-Type': 'application/json' },
+        });
+
+        // Backend returns { success: true, data: productsArray, meta: { total, page, limit } }
+        const resp = response.data || {};
+        const products = resp.data ?? resp ?? [];
+        const meta = resp.meta ?? {};
+        return { products, meta, raw: resp };
+    } catch (error) {
+        console.error('searchProducts error:', error.response?.data || error.message || error);
+        throw error;
+    }
+};
+
+export { productFetchOnCategory, getAllCategories, searchProducts };

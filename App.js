@@ -17,6 +17,7 @@ import ProductDetailsScreen from './screens/ProductDetails';
 import SettingScreen from './screens/SettingScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import { useSelector } from 'react-redux';
+import SearchScreen from './screens/SearchScreen';
 
 
 const Stack = createNativeStackNavigator();
@@ -64,6 +65,15 @@ function HomeTabs() {
           title: 'Location',
           tabBarLabel: 'Location',
           tabBarIcon: ({ color }) => <Text style={{ fontSize: 24 }}>📍</Text>,
+        }}
+      />
+      <Tab.Screen
+        name="SearchTab"
+        component={SearchScreen}
+        options={{
+          title: 'Search',
+          tabBarLabel: 'Search',
+          tabBarIcon: ({ color }) => <Text style={{ fontSize: 24 }}>S</Text>,
         }}
       />
       <Tab.Screen
