@@ -1,16 +1,26 @@
 import { StyleSheet, Text, View, TextInput, Pressable, FlatList, Image, ActivityIndicator } from "react-native"
 import { useState, useEffect } from 'react';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { searchProducts } from '../utils/productFetch';
 import { getAllCategories } from "../utils/productFetch";
 
 function SearchScreen() {
     const nav = useNavigation();
+    const route = useRoute();
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState([]);
     const [allItems, setAllItems] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+
+
+    //get query from navigation params
+    useEffect(() => {
+        const query = route.params?.query || '';
+        if (query) {
+            setSearchQuery(query);
+        }
+    }, [route.params?.query]);
 
     // Dropdown states
     const [selectedCategory, setSelectedCategory] = useState('All');

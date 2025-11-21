@@ -16,6 +16,7 @@ import { getAllCategories } from "../utils/productFetch";
 function HomeScreen() {
     const nav = useNavigation();
     const [selectedCategory, setSelectedCategory] = useState('Beverages');
+    const [searchText, setSearchText] = useState('');
     const dispatch = useDispatch();
     const categories = useSelector(selectCategories) ?? [];
 
@@ -90,6 +91,13 @@ function HomeScreen() {
         },
     ];
 
+    const handleSearch = () => {
+        nav.navigate('SearchTab', { query: searchText });
+
+        setSearchText('');
+    }
+
+
     return (
         <View style={styles.container}>
             {/* Header */}
@@ -116,8 +124,11 @@ function HomeScreen() {
                         style={styles.searchInput}
                         placeholder="Search"
                         placeholderTextColor="#6b7280"
+                        value={searchText}
+                        onChangeText={(text) => setSearchText(text)}
+                        onSubmitEditing={handleSearch}
                     />
-                    <Pressable style={styles.searchIcon}>
+                    <Pressable style={styles.searchIcon} onPress={handleSearch}>
                         <Text>🔍</Text>
                     </Pressable>
                 </View>

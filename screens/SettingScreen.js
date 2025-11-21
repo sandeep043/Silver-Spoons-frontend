@@ -13,6 +13,7 @@ function SettingScreen() {
 
     const handleLogout = () => {
         dispatch(logout());
+        navigation.replace('Login');
     };
     return (
         <View style={styles.container}>

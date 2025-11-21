@@ -60,7 +60,10 @@ function CartScreen() {
         );
     };
     const handleItemDelete = async (item) => {
-        await removeItemFromCart(item._id);
+        console.log('Deleting item from cart:', token);
+        await removeItemFromCart(item._id, token);
+        // Re-fetch cart data after deletion
+        getCartData();
     }
 
     const calculateSubtotal = () => {
@@ -183,7 +186,7 @@ function CartScreen() {
 
             {/* Proceed to Pay Button */}
             <View style={styles.bottomContainer}>
-                <Pressable style={styles.proceedButton}>
+                <Pressable style={styles.proceedButton} onPress={() => nav.navigate('Payment', { amount: grandTotal, cartItems: cartItems })}>
                     <Text style={styles.proceedButtonText}>PROCEED TO PAY</Text>
                 </Pressable>
             </View>

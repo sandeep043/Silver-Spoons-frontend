@@ -13,12 +13,15 @@ import { useEffect, useState } from 'react';
 import VerifyOTPScreen from './screens/VerifyOTP';
 import HomeScreen from './screens/HomeScreen';
 import CartScreen from './screens/CartScreen';
-import ProductDetailsScreen from './screens/ProductDetails';
+
 import SettingScreen from './screens/SettingScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import { useSelector } from 'react-redux';
 import SearchScreen from './screens/SearchScreen';
-
+import AddAdressScreen from './screens/AddAdressScreen';
+import AddressScreen from './screens/AddressScreen';
+import PaymentScreen from './screens/PaymentScreen';
+import PaymentResult from './screens/PaymentResultScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -56,15 +59,6 @@ function HomeTabs() {
           title: 'Home',
           tabBarLabel: 'Home',
           tabBarIcon: ({ color }) => <Text style={{ fontSize: 24 }}>🏠</Text>,
-        }}
-      />
-      <Tab.Screen
-        name="LocationTab"
-        component={ProductDetailsScreen}
-        options={{
-          title: 'Location',
-          tabBarLabel: 'Location',
-          tabBarIcon: ({ color }) => <Text style={{ fontSize: 24 }}>📍</Text>,
         }}
       />
       <Tab.Screen
@@ -148,7 +142,7 @@ function RootNavigator() {
           <Stack.Screen name="VerifyOTP" options={{ headerShown: false }} component={VerifyOTPScreen} />
           {/* Home screens only accessible after login */}
           <Stack.Screen name="Home" options={{ headerShown: false }} component={HomeTabs} />
-          <Stack.Screen name="ProductDetails" options={{ headerShown: false }} component={ProductDetailsScreen} />
+          <Stack.Screen name="Address" options={{ headerShown: false }} component={AddressScreen} />
           <Stack.Screen name="Cart" options={{ headerShown: false }} component={CartScreen} />
           <Stack.Screen name="Settings" options={{ headerShown: false }} component={SettingScreen} />
           <Stack.Screen name="Profile" options={{ headerShown: false }} component={ProfileScreen} />
@@ -165,10 +159,13 @@ function RootNavigator() {
           // User is logged in - show Home with protected screens
           <Stack.Navigator initialRouteName='Home'>
             <Stack.Screen name="Home" options={{ headerShown: false }} component={HomeTabs} />
-            <Stack.Screen name="ProductDetails" options={{ headerShown: false }} component={ProductDetailsScreen} />
+            <Stack.Screen name="Address" options={{ headerShown: false }} component={AddressScreen} />
+            <Stack.Screen name="AddAddress" options={{ headerShown: false }} component={AddAdressScreen} />
             <Stack.Screen name="Cart" options={{ headerShown: false }} component={CartScreen} />
             <Stack.Screen name="Settings" options={{ headerShown: false }} component={SettingScreen} />
             <Stack.Screen name="Profile" options={{ headerShown: false }} component={ProfileScreen} />
+            <Stack.Screen name="Payment" options={{ headerShown: false }} component={PaymentScreen} />
+            <Stack.Screen name="PaymentResult" options={{ headerShown: false }} component={PaymentResult} />
           </Stack.Navigator>
         ) : (
           // User is not logged in - show Login/SignUp screens

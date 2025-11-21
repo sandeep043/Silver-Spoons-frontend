@@ -1,5 +1,4 @@
 import axios from 'axios';
-import { use } from 'react';
 
 
 const addItemToCart = async (item, token, quantity = 1) => {
@@ -24,7 +23,7 @@ const addItemToCart = async (item, token, quantity = 1) => {
     }
 };
 
-const decreaseQuantity = async (itemId, quantity = 1) => {
+const decreaseQuantity = async (itemId, token, quantity = 1) => {
     try {
         if (!itemId) {
             throw new Error('Valid itemId is required');
@@ -49,16 +48,13 @@ const decreaseQuantity = async (itemId, quantity = 1) => {
 
 const removeItemFromCart = async (itemId, token) => {
     try {
-        if (!itemId) {
-            throw new Error('Valid itemId is required');
-        }
-        console.log(`Removing item from cart: ${itemId}`);
+        // axios.delete accepts (url, config). To send a request body with DELETE,
+        // include the body in the `data` field of the config object.
         const response = await axios.delete(`http://10.0.2.2:4000/api/cart/remove`, {
-            productId: itemId,
-        }, {
+            data: { productId: itemId },
             headers: {
                 'Content-Type': 'application/json',
-                Authorization: `Bearer ${token}` // if using JWT auth
+                Authorization: `Bearer ${token}`,
             },
         });
         return response.data;
