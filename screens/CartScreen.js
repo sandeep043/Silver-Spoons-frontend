@@ -1,10 +1,11 @@
-import { StyleSheet, Text, View, Pressable, ScrollView, Image, RefreshControl, } from "react-native"
-import { useState, useCallback } from 'react';
+import { StyleSheet, Text, View, Pressable, ScrollView, Image, RefreshControl, Modal, FlatList } from "react-native"
+import { useState, useCallback, useRef } from 'react';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { getCartItems } from '../utils/cartFetch';
 import { useSelector } from "react-redux";
 import { useEffect } from "react";
-import { removeItemFromCart } from "../utils/cartFetch";
+import { removeItemFromCart, decreaseQuantity, addItemToCart } from "../utils/cartFetch";
+import { getAllAddresses, getDefaultAddress } from '../utils/AddressFetch';
 
 
 function CartScreen() {
@@ -15,8 +16,14 @@ function CartScreen() {
 
 
     const [cartItems, setCartItems] = useState([]);
-
     const [refreshing, setRefreshing] = useState(false);
+    const [deliveryAddress, setDeliveryAddress] = useState('Flat no 9B, Landmark World, Palazhi, Calicut');
+    const [deliveryTime, setDeliveryTime] = useState('Breakfast - 7:30AM');
+    const [showAddressModal, setShowAddressModal] = useState(false);
+    const [addresses, setAddresses] = useState([]);
+
+    // Track if we've loaded the initial default address
+    const isInitialLoadDone = useRef(false);
 
     const getCartData = async () => {
         try {
@@ -29,6 +36,30 @@ function CartScreen() {
         }
     };
 
+    const loadDefaultAddress = async () => {
+        try {
+            const response = await getDefaultAddress(token);
+            console.log('Default address:', response);
+            if (response.data) {
+                const addr = response.data;
+                const fullAddress = `${addr.street}, ${addr.addressLine1}${addr.addressLine2 ? ', ' + addr.addressLine2 : ''}, ${addr.city}, ${addr.state} ${addr.zipCode}`;
+                setDeliveryAddress(fullAddress);
+            }
+        } catch (error) {
+            console.error('Failed to fetch default address:', error);
+        }
+    };
+
+    const fetchAllAddresses = async () => {
+        try {
+            const response = await getAllAddresses(token);
+            console.log('All addresses:', response);
+            setAddresses(response.data);
+        } catch (error) {
+            console.error('Failed to fetch addresses:', error);
+        }
+    };
+
     const onRefresh = useCallback(() => {
         setRefreshing(true);
         getCartData().then(() => {
@@ -36,22 +67,38 @@ function CartScreen() {
         }).catch(() => {
             setRefreshing(false);
         });
-    }, []);
+    }, [token]);
 
+    // Load default address only on initial mount
+    useEffect(() => {
+        if (!isInitialLoadDone.current && token) {
+            loadDefaultAddress();
+            isInitialLoadDone.current = true;
+        }
+    }, [token]);
+
+    // Refresh cart items when screen is focused (but NOT the address)
     useFocusEffect(
         useCallback(() => {
-            // Fetch cart data every time screen is focused
             getCartData();
-        }, [])
+        }, [token])
     );
 
-    const [deliveryAddress, setDeliveryAddress] = useState('Flat no 9B, Landmark World, Palazhi, Calicut');
-    const [deliveryTime, setDeliveryTime] = useState('Breakfast - 7:30AM');
+    const handleSelectAddress = (address) => {
+        const fullAddress = `${address.street}, ${address.addressLine1}${address.addressLine2 ? ', ' + address.addressLine2 : ''}, ${address.city}, ${address.state} ${address.zipCode}`;
+        setDeliveryAddress(fullAddress);
+        setShowAddressModal(false);
+    };
+
+    const handleOpenAddressModal = () => {
+        fetchAllAddresses();
+        setShowAddressModal(true);
+    };
 
     const updateQuantity = (id, change) => {
         setCartItems(prevItems =>
             prevItems.map(item => {
-                if (item.id === id) {
+                if (item._id === id) {
                     const newQuantity = Math.max(0, item.quantity + change);
                     return { ...item, quantity: newQuantity };
                 }
@@ -59,6 +106,32 @@ function CartScreen() {
             }).filter(item => item.quantity > 0)
         );
     };
+
+    const handelIncreaseQuantity = async (itemId) => {
+        try {
+
+            const response = await addItemToCart(itemId, token);
+            getCartData();
+        } catch (error) {
+            console.error('Failed to increase quantity:', error);
+        }
+
+    };
+
+    const handelDecreaseQuantity = async (itemId) => {
+        try {
+            console.log('Decreasing quantity for item:', itemId);
+            await decreaseQuantity(itemId, token);
+            getCartData();
+        } catch (error) {
+            console.error('Failed to decrease quantity:', error);
+        }
+    };
+
+
+
+
+
     const handleItemDelete = async (item) => {
         console.log('Deleting item from cart:', token);
         await removeItemFromCart(item._id, token);
@@ -86,110 +159,154 @@ function CartScreen() {
                 <View style={{ width: 40 }} />
             </View>
 
-            <ScrollView
-                showsVerticalScrollIndicator={false}
-                refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-            >
-                {/* Order Summary Card */}
-                <View style={styles.summaryCard}>
-                    <View style={styles.summaryHeader}>
-                        <Text style={styles.summaryTitle}>Order summary</Text>
-                    </View>
-
-                    {/* Cart Items */}
-                    {cartItems.map((item) => (
-                        <View key={item._id} style={styles.cartItem}>
-                            <Image
-                                source={{
-                                    uri: item.productId.ImageUrl
-                                }}
-                                style={styles.itemImage}
-                            />
-                            <View style={styles.itemDetails}>
-                                <Text style={styles.itemName}>{item.productId.name}</Text>
-                                <View style={styles.quantityContainer}>
-                                    <Pressable
-                                        style={styles.quantityButton}
-                                        onPress={() => updateQuantity(item.id, -1)}
-                                    >
-                                        <Text style={styles.quantityButtonText}>-</Text>
-                                    </Pressable>
-                                    <Text style={styles.quantityText}>{item.quantity}</Text>
-                                    <Pressable
-                                        style={styles.quantityButton}
-                                        onPress={() => updateQuantity(item.id, 1)}
-                                    >
-                                        <Text style={styles.quantityButtonText}>+</Text>
-                                    </Pressable>
-                                </View>
+            {cartItems.length === 0 ? (
+                <View style={styles.emptyCartContainer}>
+                    <Text style={styles.emptyCartText}>Your cart is empty</Text>
+                    <Pressable style={styles.addItemsButton} onPress={() => nav.navigate('Home')}>
+                        <Text style={styles.addItemsButtonText}>Add Items</Text>
+                    </Pressable>
+                </View>
+            ) : (
+                <>
+                    <ScrollView
+                        showsVerticalScrollIndicator={false}
+                        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+                    >
+                        {/* Order Summary Card */}
+                        <View style={styles.summaryCard}>
+                            <View style={styles.summaryHeader}>
+                                <Text style={styles.summaryTitle}>Order summary</Text>
                             </View>
-                            <Pressable onPress={() => handleItemDelete(item)} style={styles.cartDeleteButton}>
-                                <Text style={styles.cartDeleteButtonText}>Delete</Text>
-                            </Pressable>
-                            <Text style={styles.itemPrice}>₹ {item.productId.price * item.quantity}</Text>
-                        </View>
-                    ))}
 
-                    {/* Delivery Address */}
-                    <View style={styles.infoRow}>
-                        <Text style={styles.infoIcon}>📍</Text>
-                        <Text style={styles.infoText}>{deliveryAddress}</Text>
-                        <Pressable>
-                            <Text style={styles.editIcon}>✏️</Text>
+                            {/* Cart Items */}
+                            {cartItems.map((item) => (
+                                <View key={item._id} style={styles.cartItem}>
+                                    <Image
+                                        source={{
+                                            uri: item.productId.ImageUrl
+                                        }}
+                                        style={styles.itemImage}
+                                    />
+                                    <View style={styles.itemDetails}>
+                                        <Text style={styles.itemName}>{item.productId.name}</Text>
+                                        <View style={styles.quantityContainer}>
+                                            <Pressable
+                                                style={styles.quantityButton}
+                                                onPress={() => handelDecreaseQuantity(item._id)}
+                                            >
+                                                <Text style={styles.quantityButtonText}>-</Text>
+                                            </Pressable>
+                                            <Text style={styles.quantityText}>{item.quantity}</Text>
+                                            <Pressable
+                                                style={styles.quantityButton}
+                                                onPress={() => handelIncreaseQuantity(item._id)}
+                                            >
+                                                <Text style={styles.quantityButtonText}>+</Text>
+                                            </Pressable>
+                                        </View>
+                                    </View>
+                                    <Pressable onPress={() => handleItemDelete(item)} style={styles.cartDeleteButton}>
+                                        <Text style={styles.cartDeleteButtonText}>Delete</Text>
+                                    </Pressable>
+                                    <Text style={styles.itemPrice}>₹ {item.productId.price * item.quantity}</Text>
+                                </View>
+                            ))}
+
+                            {/* Delivery Address */}
+                            <View style={styles.infoRow}>
+                                <Text style={styles.infoIcon}>📍</Text>
+                                <Text style={styles.infoText}>{deliveryAddress}</Text>
+                                <Pressable onPress={handleOpenAddressModal}>
+                                    <Text style={styles.changeButton}>Change</Text>
+                                </Pressable>
+                            </View>
+
+
+
+                            {/* Rate */}
+                            <View style={styles.rateRow}>
+                                <Text style={styles.rateLabel}>Rate</Text>
+                                <Text style={styles.rateValue}>₹ {subtotal}</Text>
+                            </View>
+                        </View>
+
+                        {/* Coupons */}
+                        <Pressable style={styles.couponsCard}>
+                            <Text style={styles.giftIcon}>🎁</Text>
+                            <Text style={styles.couponsText}>Coupons</Text>
+                            <Text style={styles.arrowIcon}>›</Text>
+                        </Pressable>
+
+                        {/* Bill Details */}
+                        <View style={styles.billCard}>
+                            <View style={styles.billRow}>
+                                <Text style={styles.billLabel}>Subtotal</Text>
+                                <Text style={styles.billValue}>₹ {subtotal}</Text>
+                            </View>
+                            <View style={styles.billRow}>
+                                <Text style={styles.billLabel}>GST</Text>
+                                <Text style={styles.billValue}>₹ {gst}</Text>
+                            </View>
+                            <View style={styles.billRow}>
+                                <Text style={styles.billLabel}>Delivery partner fee for 8km</Text>
+                                <Text style={styles.billValue}>₹ {deliveryFee}</Text>
+                            </View>
+                        </View>
+
+                        {/* Grand Total */}
+                        <View style={styles.totalCard}>
+                            <Text style={styles.totalLabel}>Grand Total</Text>
+                            <Text style={styles.totalValue}>₹ {grandTotal}</Text>
+                        </View>
+
+                        <View style={{ height: 120 }} />
+                    </ScrollView>
+
+                    {/* Proceed to Pay Button */}
+                    <View style={styles.bottomContainer}>
+                        <Pressable style={styles.proceedButton} onPress={() => nav.navigate('Payment', { amount: grandTotal, cartItems: cartItems })}>
+                            <Text style={styles.proceedButtonText}>PROCEED TO PAY</Text>
                         </Pressable>
                     </View>
+                </>
+            )}
 
-                    {/* Delivery Time */}
-                    <View style={styles.infoRow}>
-                        <Text style={styles.infoIcon}>🕐</Text>
-                        <Text style={styles.infoText}>{deliveryTime}</Text>
-                    </View>
-
-                    {/* Rate */}
-                    <View style={styles.rateRow}>
-                        <Text style={styles.rateLabel}>Rate</Text>
-                        <Text style={styles.rateValue}>₹ {subtotal}</Text>
+            {/* Address Modal */}
+            <Modal
+                visible={showAddressModal}
+                transparent={true}
+                animationType="slide"
+                onRequestClose={() => setShowAddressModal(false)}
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalContent}>
+                        <View style={styles.modalHeader}>
+                            <Text style={styles.modalTitle}>Select Address</Text>
+                            <Pressable onPress={() => setShowAddressModal(false)}>
+                                <Text style={styles.closeButton}>✕</Text>
+                            </Pressable>
+                        </View>
+                        <FlatList
+                            data={addresses}
+                            keyExtractor={(item) => item._id}
+                            renderItem={({ item }) => (
+                                <Pressable
+                                    style={styles.addressOption}
+                                    onPress={() => handleSelectAddress(item)}
+                                >
+                                    <View style={styles.addressOptionContent}>
+                                        <Text style={styles.addressOptionTitle}>{item.street}</Text>
+                                        <Text style={styles.addressOptionSubtitle}>
+                                            {item.addressLine1}{item.addressLine2 ? ', ' + item.addressLine2 : ''}, {item.city}, {item.state} {item.zipCode}
+                                        </Text>
+                                    </View>
+                                    {item.default && <Text style={styles.defaultBadgeModal}>default</Text>}
+                                </Pressable>
+                            )}
+                        />
                     </View>
                 </View>
-
-                {/* Coupons */}
-                <Pressable style={styles.couponsCard}>
-                    <Text style={styles.giftIcon}>🎁</Text>
-                    <Text style={styles.couponsText}>Coupons</Text>
-                    <Text style={styles.arrowIcon}>›</Text>
-                </Pressable>
-
-                {/* Bill Details */}
-                <View style={styles.billCard}>
-                    <View style={styles.billRow}>
-                        <Text style={styles.billLabel}>Subtotal</Text>
-                        <Text style={styles.billValue}>₹ {subtotal}</Text>
-                    </View>
-                    <View style={styles.billRow}>
-                        <Text style={styles.billLabel}>GST</Text>
-                        <Text style={styles.billValue}>₹ {gst}</Text>
-                    </View>
-                    <View style={styles.billRow}>
-                        <Text style={styles.billLabel}>Delivery partner fee for 8km</Text>
-                        <Text style={styles.billValue}>₹ {deliveryFee}</Text>
-                    </View>
-                </View>
-
-                {/* Grand Total */}
-                <View style={styles.totalCard}>
-                    <Text style={styles.totalLabel}>Grand Total</Text>
-                    <Text style={styles.totalValue}>₹ {grandTotal}</Text>
-                </View>
-
-                <View style={{ height: 120 }} />
-            </ScrollView>
-
-            {/* Proceed to Pay Button */}
-            <View style={styles.bottomContainer}>
-                <Pressable style={styles.proceedButton} onPress={() => nav.navigate('Payment', { amount: grandTotal, cartItems: cartItems })}>
-                    <Text style={styles.proceedButtonText}>PROCEED TO PAY</Text>
-                </Pressable>
-            </View>
+            </Modal>
         </View>
     );
 }
@@ -424,5 +541,94 @@ const styles = StyleSheet.create({
         padding: 2,
         paddingLeft: 6,
         paddingRight: 6,
+    },
+    emptyCartContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    emptyCartText: {
+        fontSize: 18,
+        color: '#9ca3af',
+        marginBottom: 20,
+    },
+    addItemsButton: {
+        backgroundColor: '#FF6B6B',
+        paddingVertical: 12,
+        paddingHorizontal: 30,
+        borderRadius: 25,
+    },
+    addItemsButtonText: {
+        color: '#ffffff',
+        fontSize: 16,
+        fontWeight: '600',
+    },
+    changeButton: {
+        color: '#26469d',
+        fontSize: 13,
+        fontWeight: '600',
+    },
+    editIcon: {
+        fontSize: 14,
+    },
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        justifyContent: 'flex-end',
+    },
+    modalContent: {
+        backgroundColor: '#1a1a1a',
+        borderTopLeftRadius: 20,
+        borderTopRightRadius: 20,
+        maxHeight: '80%',
+        paddingBottom: 20,
+    },
+    modalHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: '#2a2a2a',
+    },
+    modalTitle: {
+        fontSize: 18,
+        fontWeight: '600',
+        color: '#ffffff',
+    },
+    closeButton: {
+        fontSize: 24,
+        color: '#ffffff',
+    },
+    addressOption: {
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: '#2a2a2a',
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    addressOptionContent: {
+        flex: 1,
+    },
+    addressOptionTitle: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#ffffff',
+        marginBottom: 4,
+    },
+    addressOptionSubtitle: {
+        fontSize: 12,
+        color: '#6b7280',
+    },
+    defaultBadgeModal: {
+        fontSize: 10,
+        color: '#16a34a',
+        fontWeight: '600',
+        backgroundColor: 'rgba(22, 163, 74, 0.1)',
+        paddingHorizontal: 6,
+        paddingVertical: 2,
+        borderRadius: 4,
     },
 });

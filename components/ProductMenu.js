@@ -21,7 +21,7 @@ function ProductMenu({ selectedCategory: selectedCategoryProp }) {
 
     const handleAddCart = async (item) => {
 
-        const response = await addItemToCart(item, token, 1);
+        const response = await addItemToCart(item._id, token);
         console.log('Add to cart response:', response);
 
     }

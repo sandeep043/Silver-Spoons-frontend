@@ -1,5 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { View, Text, ActivityIndicator, Button, Alert } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { WebView } from 'react-native-webview';
 import { api } from '../utils/PaymentAPI';
 import { useSelector } from 'react-redux';
@@ -14,8 +15,7 @@ const PaymentScreen = ({ route, navigation }) => {
     };
     console.log('PaymentScreen order:', order, 'params:', params);
     const [loading, setLoading] = useState(false);
-    const [paymentId, setPaymentId] = useState(null);
-    const [txnid, setTxnid] = useState(null);
+    const [paymentResponse, setPaymentResponse] = useState(null); // Store txnid and paymentId
     const [webviewHtml, setWebviewHtml] = useState(null);
     const [showWebview, setShowWebview] = useState(false);
     const webviewRef = useRef(null);
@@ -59,8 +59,14 @@ const PaymentScreen = ({ route, navigation }) => {
             }
 
             const data = res.data;
-            setPaymentId(data.paymentId);
-            setTxnid(data.txnid);
+            console.log('Payment initiated:', data);
+
+            // Store payment response for verification later
+            setPaymentResponse({
+                txnid: data.txnid,
+                paymentId: data.paymentId,
+                amount: data.amount || order.amount
+            });
 
             // Case A: PayU SDK returns structured form with action and params
             if (data.paymentForm && data.paymentForm.action && data.paymentForm.params) {
@@ -96,22 +102,16 @@ const PaymentScreen = ({ route, navigation }) => {
 
                 setWebviewHtml(html);
                 setShowWebview(true);
+                setLoading(false);
             }
             // Case B: server returned raw HTML (less common with PayU SDK)
             else if (data.paymentForm && typeof data.paymentForm === 'string') {
                 console.log('Opening PayU HTML form');
                 setWebviewHtml(data.paymentForm);
                 setShowWebview(true);
+                setLoading(false);
             }
-            // Case C: Backend returned payment record but no paymentForm
-            // This means payment was initiated on backend, proceed with polling
-            else if (data.paymentId && !data.paymentForm) {
-                console.log('Payment initiated on backend without form. Starting polling...');
-                // Payment is already initiated, just wait for status updates
-                // Close loading and start polling
-                setShowWebview(false);
-            }
-            // Case D: Fallback - unexpected format
+            // Case C: Fallback - unexpected format
             else {
                 console.warn('Unexpected paymentForm format:', data.paymentForm);
                 Alert.alert(
@@ -127,157 +127,46 @@ const PaymentScreen = ({ route, navigation }) => {
             console.error('Payment initiate error:', err);
             const errorMsg = err?.response?.data?.message || err?.message || 'Network error occurred';
             Alert.alert('Payment Error', errorMsg);
-        } finally {
             setLoading(false);
         }
     };
-    // Poll payment status for final result
-    const pollStatus = async (interval = 3000, maxAttempts = 30) => {
-        if (!paymentId) {
-            console.warn('No paymentId available for polling');
-            return;
-        }
-
-        console.log('Starting payment status polling...');
-        const client = api(token);
-        let attempts = 0;
-        let isPolling = true;
-
-        const timer = setInterval(async () => {
-            if (!isPolling) {
-                clearInterval(timer);
-                return;
-            }
-
-            attempts += 1;
-            console.log(`Poll attempt ${attempts}/${maxAttempts}`);
-
-            try {
-                const res = await client.get(`/payment/status/${paymentId}`);
-                console.log('Payment status response:', res.data);
-
-                if (res.data && res.data.success && res.data.data) {
-                    const payment = res.data.data;
-                    console.log('Payment status:', payment.status);
-
-                    // If payment status changed from 'initiated', we have a result
-                    if (payment.status && payment.status !== 'initiated') {
-                        clearInterval(timer);
-                        isPolling = false;
-
-                        console.log('Payment completed with status:', payment.status);
-
-                        // Navigate to result screen with full details
-                        navigation.replace('PaymentResult', {
-                            status: payment.status,
-                            txnid: payment.txnid,
-                            paymentId: payment._id,
-                            orderId: payment.orderId || null,
-                            amount: payment.amount,
-                            message: payment.status === 'success'
-                                ? 'Payment successful! Your order has been placed.'
-                                : 'Payment failed. Please try again.'
-                        });
-                    }
-                }
-            } catch (err) {
-                console.warn(`Poll error (attempt ${attempts}):`, err.message || err);
-            }
-
-            if (attempts >= maxAttempts) {
-                clearInterval(timer);
-                isPolling = false;
-                console.error('Payment polling timeout');
-                Alert.alert(
-                    'Payment Timeout',
-                    'Unable to confirm payment. Please check your order history or contact support.',
-                    [
-                        {
-                            text: 'Check Orders',
-                            onPress: () => navigation.navigate('Orders')
-                        },
-                        {
-                            text: 'Retry',
-                            onPress: () => {
-                                setPaymentId(null);
-                                setShowWebview(false);
-                            }
-                        }
-                    ]
-                );
-            }
-        }, interval);
-
-        // Cleanup function - stop polling if component unmounts
-        return () => {
-            isPolling = false;
-            clearInterval(timer);
-        };
-    };
-
-    // When paymentId set and WebView closed, start polling
-    useEffect(() => {
-        let cleanup;
-        if (paymentId && !showWebview) {
-            cleanup = pollStatus();
-        }
-        return cleanup;
-    }, [paymentId, showWebview]);
 
     const onNavigationStateChange = (navState) => {
         const url = navState.url;
-        console.log('WebView navigated to:', url);
+        console.log('WebView URL changed to:', url);
 
-        // Detect PayU redirect completion - look for your app's deep link
-        const deepLinkPattern = /silverrest:\/\/payment/i;
+        // Detect when PayU redirects to our verify endpoint (which means payment processing is done)
+        if (url.includes('/api/payment/verify')) {
+            console.log('Payment verification detected - closing WebView and navigating to result screen');
 
-        // Also detect server verify endpoint being called (if PayU redirects there)
-        const verifyPattern = /\/api\/payment\/verify/i;
-
-        if (deepLinkPattern.test(url) || verifyPattern.test(url)) {
-            console.log('Payment flow completed, closing WebView');
-            // Close webview - polling will detect status change
+            // Close WebView
             setShowWebview(false);
-        } else if (url.includes('error') || url.includes('failed')) {
-            console.log('Payment error detected in URL');
-            setShowWebview(false);
-            Alert.alert('Payment Error', 'Payment was not completed. Please try again.');
+            setLoading(true);
+
+            // Give backend a moment to process, then navigate to result screen
+            // The result screen will call the verify API to get final status
+            setTimeout(() => {
+                navigation.replace('PaymentResult', {
+                    txnid: paymentResponse?.txnid,
+                    paymentId: paymentResponse?.paymentId,
+                    amount: paymentResponse?.amount,
+                    fromWebView: true
+                });
+            }, 1000);
         }
     };
-    return (
-        <View style={{ flex: 1 }}>
-            {loading && <ActivityIndicator size="large" />}
-            {!showWebview && (
-                <View style={{ padding: 16 }}>
-                    <Text>Pay: ₹{order?.amount ?? params.amount ?? 0}</Text>
-                    <Button title="Pay Now" onPress={initiate} />
-
-                    {paymentId && (
-                        <View style={{ marginTop: 20 }}>
-                            <Text style={{ marginBottom: 10 }}>Payment ID: {paymentId}</Text>
-                            <Text style={{ marginBottom: 10, color: '#666' }}>
-                                Polling for payment status... (Attempt tracking in logs)
-                            </Text>
-                            <Button
-                                title="Force Complete Payment (TEST)"
-                                onPress={() => {
-                                    // Manual test: simulate successful payment after user clicks
-                                    navigation.replace('PaymentResult', {
-                                        status: 'success',
-                                        txnid: txnid,
-                                        paymentId: paymentId,
-                                        orderId: null,
-                                        amount: order?.amount ?? params.amount ?? 0,
-                                        message: 'Payment successful! Your order has been placed.'
-                                    });
-                                }}
-                            />
-                        </View>
-                    )}
-                </View>
-            )}
-
-            {showWebview && webviewHtml && (
+    // Only show one of: loading, WebView, or initial screen
+    if (loading) {
+        return (
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' }}>
+                <ActivityIndicator size="large" color="#FF6B6B" />
+                <Text style={{ marginTop: 10, color: '#666' }}>Processing payment...</Text>
+            </View>
+        );
+    }
+    if (showWebview && webviewHtml) {
+        return (
+            <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }} edges={['top', 'bottom', 'left', 'right']}>
                 <WebView
                     ref={webviewRef}
                     originWhitelist={['*']}
@@ -285,8 +174,25 @@ const PaymentScreen = ({ route, navigation }) => {
                     onNavigationStateChange={onNavigationStateChange}
                     javaScriptEnabled
                     domStorageEnabled
+                    style={{ flex: 1, backgroundColor: '#fff' }}
                 />
-            )}
+            </SafeAreaView>
+        );
+    }
+    // Initial screen
+    return (
+        <View style={{ flex: 1, padding: 16, justifyContent: 'center', backgroundColor: '#fff' }}>
+            <Text style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 30, textAlign: 'center' }}>
+                Payment
+            </Text>
+            <Text style={{ fontSize: 18, marginBottom: 20, textAlign: 'center' }}>
+                Amount to Pay: <Text style={{ color: '#FF6B6B', fontWeight: 'bold' }}>₹{order?.amount ?? params.amount ?? 0}</Text>
+            </Text>
+            <Button
+                title="Pay Now"
+                onPress={initiate}
+                color="#FF6B6B"
+            />
         </View>
     );
 };

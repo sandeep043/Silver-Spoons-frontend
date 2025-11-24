@@ -1,14 +1,14 @@
 import axios from 'axios';
 
 
-const addItemToCart = async (item, token, quantity = 1) => {
+const addItemToCart = async (item_id, token) => {
     try {
-        if (!item || !item._id) {
+        if (!item_id) {
             throw new Error('Valid item with id is required');
         }
-        console.log(`Adding item to cart: ${item._id} with quantity: ${token}`);
+
         const response = await axios.post(`http://10.0.2.2:4000/api/cart/add`, {
-            productId: item._id
+            productId: item_id
         }, {
 
             headers: {
@@ -23,15 +23,13 @@ const addItemToCart = async (item, token, quantity = 1) => {
     }
 };
 
-const decreaseQuantity = async (itemId, token, quantity = 1) => {
+const decreaseQuantity = async (itemId, token) => {
     try {
         if (!itemId) {
             throw new Error('Valid itemId is required');
         }
-        console.log(`Decreasing quantity for item: ${itemId} by: ${quantity}`);
         const response = await axios.post(`http://10.0.2.2:4000/api/cart/decrease`, {
             productId: itemId,
-            quantity,
         }, {
             headers: {
                 'Content-Type': 'application/json',

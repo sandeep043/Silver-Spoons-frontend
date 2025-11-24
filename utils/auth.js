@@ -19,7 +19,7 @@ const LoginUser = async (email, password) => {
     }
     catch (error) {
         console.error("Login failed in auth.js", error.response?.data || error.message || error);
-        throw error;
+
     }
 };
 
@@ -46,7 +46,7 @@ const SignUpUser = async (fullName, email, phoneNumber, password) => {
     }
     catch (error) {
         console.error("Sign up failed in auth.js", error.response?.data || error.message || error);
-        throw error;
+
 
     }
 
@@ -69,7 +69,7 @@ const VerifyOTPUser = async (email, otp) => {
     }
     catch (error) {
         console.error("OTP verification failed in auth.js", error.response?.data || error.message || error);
-        throw error;
+
     }
 }
 
@@ -88,7 +88,7 @@ const ResendOTPUser = async (email) => {
     }
     catch (error) {
         console.error("Resend OTP failed in auth.js", error.response?.data || error.message || error);
-        throw error;
+
     }
 }
 

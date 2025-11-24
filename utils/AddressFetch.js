@@ -34,5 +34,21 @@ const createAddress = async (addressData, token) => {
     }
 };
 
+const getDefaultAddress = async (token) => {
+    try {
+        const response = await axios.get(`http://10.0.2.2:4000/api/address/default`, {
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+            },
+        });
+        return response.data;
+    }
+    catch (error) {
+        console.error('getDefaultAddress error:', error.response?.data || error.message || error);
+        throw error;
+    }
+}
 
-export { getAllAddresses, createAddress };
+
+export { getAllAddresses, createAddress, getDefaultAddress };
