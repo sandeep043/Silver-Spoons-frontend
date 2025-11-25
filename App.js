@@ -22,6 +22,7 @@ import AddAdressScreen from './screens/AddAdressScreen';
 import AddressScreen from './screens/AddressScreen';
 import PaymentScreen from './screens/PaymentScreen';
 import PaymentResult from './screens/PaymentResultScreen';
+import ProductViewScreen from './screens/ProductViewScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -166,6 +167,7 @@ function RootNavigator() {
             <Stack.Screen name="Profile" options={{ headerShown: false }} component={ProfileScreen} />
             <Stack.Screen name="Payment" options={{ headerShown: false }} component={PaymentScreen} />
             <Stack.Screen name="PaymentResult" options={{ headerShown: false }} component={PaymentResult} />
+            <Stack.Screen name="ProductView" options={{ headerShown: false }} component={ProductViewScreen} />
           </Stack.Navigator>
         ) : (
           // User is not logged in - show Login/SignUp screens

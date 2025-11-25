@@ -4,9 +4,12 @@ import ShimmerPlaceHolder from "react-native-shimmer-placeholder";
 import { productFetchOnCategory } from "../utils/productFetch";
 import { addItemToCart } from "../utils/cartFetch";
 import { useSelector } from "react-redux";
+import { useNavigation } from "@react-navigation/native";
 
 function ProductMenu({ selectedCategory: selectedCategoryProp }) {
-    const [selectedCategory, setSelectedCategory] = useState('Veg');
+
+    const nav = useNavigation();
+    const [selectedCategory, setSelectedCategory] = useState('veg');
     useEffect(() => {
         if (selectedCategoryProp && selectedCategoryProp !== selectedCategory) {
             setSelectedCategory(selectedCategoryProp);
@@ -19,9 +22,9 @@ function ProductMenu({ selectedCategory: selectedCategoryProp }) {
     const { token } = useSelector((state) => state.auth);
 
 
-    const handleAddCart = async (item) => {
+    const handleAddCart = async (itemId) => {
 
-        const response = await addItemToCart(item._id, token);
+        const response = await addItemToCart(itemId, token);
         console.log('Add to cart response:', response);
 
     }
@@ -74,7 +77,7 @@ function ProductMenu({ selectedCategory: selectedCategoryProp }) {
             ) : (
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} style={localStyles.frequentOrdersContainer}>
                     {frequentOrders.map((item) => (
-                        <View key={item._id} style={localStyles.foodCard}>
+                        <Pressable key={item._id} style={localStyles.foodCard} onPress={() => nav.navigate('ProductView', { product: item })}>
                             <ImageBackground source={{ uri: item.ImageUrl }} style={localStyles.foodImage} imageStyle={{ borderRadius: 18 }}>
                                 <View style={localStyles.dumiContainer}></View>
                                 <View style={localStyles.foodInfoContainer}>
@@ -87,7 +90,7 @@ function ProductMenu({ selectedCategory: selectedCategoryProp }) {
                                     </View>
                                     <View style={localStyles.foodFooter}>
                                         <Text style={localStyles.price}>{item.price}</Text>
-                                        <Pressable onPress={() => handleAddCart(item)} style={localStyles.addButton}>
+                                        <Pressable onPress={() => handleAddCart(item._id)} style={localStyles.addButton}>
                                             <Text style={localStyles.addButtonText}>+</Text>
                                         </Pressable>
                                     </View>
@@ -95,7 +98,7 @@ function ProductMenu({ selectedCategory: selectedCategoryProp }) {
                             </ImageBackground>
 
 
-                        </View>
+                        </Pressable>
                     ))}
                 </ScrollView>
             )}

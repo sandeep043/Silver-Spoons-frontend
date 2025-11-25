@@ -13,7 +13,7 @@ function ProfileScreen() {
         name: 'Arti Abraham',
         phone: '+91 9874563210',
         email: 'artiabraham123@gmail.com',
-        avatar: 'https://i.pravatar.cc/150?img=47'
+        avatar: null
     };
 
     const menuItems = [
@@ -32,20 +32,8 @@ function ProfileScreen() {
         {
             id: 3,
             icon: '💳',
-            title: 'Payments',
-            onPress: () => nav.navigate('Payments')
-        },
-        {
-            id: 4,
-            icon: '💎',
-            title: 'Table Reservation',
-            onPress: () => nav.navigate('TableReservation')
-        },
-        {
-            id: 5,
-            icon: '🍴',
-            title: 'Food Planner',
-            onPress: () => nav.navigate('FoodPlanner')
+            title: 'Payment Methods',
+            onPress: () => nav.navigate('PaymentMethods')
         },
         {
             id: 6,
@@ -70,12 +58,7 @@ function ProfileScreen() {
                 <Pressable onPress={() => nav.goBack()} style={styles.backButton}>
                     <Text style={styles.backIcon}>←</Text>
                 </Pressable>
-                <Pressable style={styles.orderFoodButton}>
-                    <View style={styles.orderFoodIcon}>
-                        <Text style={styles.orderFoodEmoji}>🍔</Text>
-                    </View>
-                    <Text style={styles.orderFoodText}>Order Food</Text>
-                </Pressable>
+                <Pressable style={styles.orderFoodButton} onPress={() => nav.navigate('Home')}><Text style={{ color: 'white' }}>Home</Text></Pressable>
             </View>
 
             <ScrollView showsVerticalScrollIndicator={false}>
@@ -119,30 +102,12 @@ function ProfileScreen() {
                 {/* Logout */}
                 <Pressable style={styles.logoutButton} onPress={handleLogout}>
                     <Text style={styles.logoutText}>Logout</Text>
-                    <Text style={styles.logoutArrow}>→</Text>
+
                 </Pressable>
 
                 <View style={{ height: 100 }} />
             </ScrollView>
 
-            {/* Bottom Navigation */}
-            {/* <View style={styles.bottomNav}>
-                <Pressable style={styles.navItem} onPress={() => nav.navigate('Home')}>
-                    <Text style={styles.navIcon}>🏠</Text>
-                </Pressable>
-                <Pressable style={styles.navItem}>
-                    <Text style={styles.navIcon}>📍</Text>
-                </Pressable>
-                <Pressable style={styles.navItem}>
-                    <Text style={styles.navIcon}>🛒</Text>
-                </Pressable>
-                <Pressable style={[styles.navItem, styles.navItemActive]}>
-                    <Text style={styles.navText}>Account</Text>
-                </Pressable>
-                <Pressable style={styles.navItem}>
-                    <Text style={styles.navIcon}>⚙️</Text>
-                </Pressable>
-            </View> */}
         </View>
     );
 }
@@ -200,6 +165,7 @@ const styles = StyleSheet.create({
         height: 100,
         borderRadius: 50,
         marginBottom: 16,
+        backgroundColor: '#374151',
     },
     name: {
         fontSize: 24,
@@ -253,10 +219,15 @@ const styles = StyleSheet.create({
     },
     logoutButton: {
         flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
+        backgroundColor: '#dc2626',
         marginHorizontal: 20,
-        paddingVertical: 16,
+        paddingVertical: 14,
+        width: '40%',
+        alignSelf: 'center',
+        alignItems: 'center',
+        justifyContent: 'center',
+
+        borderRadius: 12,
     },
     logoutText: {
         fontSize: 16,

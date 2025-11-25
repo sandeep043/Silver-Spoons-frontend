@@ -82,4 +82,17 @@ const searchProducts = async (options = {}) => {
     }
 };
 
-export { productFetchOnCategory, getAllCategories, searchProducts };
+const getAllComboCategories = async () => {
+    try {
+        const response = await axios.get(`http://10.0.2.2:4000/api/products/combo-categories`, {
+            headers: { 'Content-Type': 'application/json' },
+        });
+        return response.data;
+    } catch (error) {
+        console.error('getAllComboCategories error:', error.response?.data || error.message || error);
+        throw error;
+    }
+};
+
+
+export { productFetchOnCategory, getAllCategories, searchProducts, getAllComboCategories };

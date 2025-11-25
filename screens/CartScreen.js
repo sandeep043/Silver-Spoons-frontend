@@ -17,7 +17,7 @@ function CartScreen() {
 
     const [cartItems, setCartItems] = useState([]);
     const [refreshing, setRefreshing] = useState(false);
-    const [deliveryAddress, setDeliveryAddress] = useState('Flat no 9B, Landmark World, Palazhi, Calicut');
+    const [deliveryAddress, setDeliveryAddress] = useState('Fetching default address...');
     const [deliveryTime, setDeliveryTime] = useState('Breakfast - 7:30AM');
     const [showAddressModal, setShowAddressModal] = useState(false);
     const [addresses, setAddresses] = useState([]);
@@ -95,17 +95,17 @@ function CartScreen() {
         setShowAddressModal(true);
     };
 
-    const updateQuantity = (id, change) => {
-        setCartItems(prevItems =>
-            prevItems.map(item => {
-                if (item._id === id) {
-                    const newQuantity = Math.max(0, item.quantity + change);
-                    return { ...item, quantity: newQuantity };
-                }
-                return item;
-            }).filter(item => item.quantity > 0)
-        );
-    };
+    // const updateQuantity = (id, change) => {
+    //     setCartItems(prevItems =>
+    //         prevItems.map(item => {
+    //             if (item._id === id) {
+    //                 const newQuantity = Math.max(0, item.quantity + change);
+    //                 return { ...item, quantity: newQuantity };
+    //             }
+    //             return item;
+    //         }).filter(item => item.quantity > 0)
+    //     );
+    // };
 
     const handelIncreaseQuantity = async (itemId) => {
         try {
@@ -162,7 +162,10 @@ function CartScreen() {
             {cartItems.length === 0 ? (
                 <View style={styles.emptyCartContainer}>
                     <Text style={styles.emptyCartText}>Your cart is empty</Text>
-                    <Pressable style={styles.addItemsButton} onPress={() => nav.navigate('Home')}>
+                    <Pressable style={styles.addItemsButton} onPress={() => {
+                        console.log('Navigating to Home screen to add items');
+                        nav.navigate('Home')
+                    }}>
                         <Text style={styles.addItemsButtonText}>Add Items</Text>
                     </Pressable>
                 </View>
@@ -192,14 +195,14 @@ function CartScreen() {
                                         <View style={styles.quantityContainer}>
                                             <Pressable
                                                 style={styles.quantityButton}
-                                                onPress={() => handelDecreaseQuantity(item._id)}
+                                                onPress={() => handelDecreaseQuantity(item.productId._id)}
                                             >
                                                 <Text style={styles.quantityButtonText}>-</Text>
                                             </Pressable>
                                             <Text style={styles.quantityText}>{item.quantity}</Text>
                                             <Pressable
                                                 style={styles.quantityButton}
-                                                onPress={() => handelIncreaseQuantity(item._id)}
+                                                onPress={() => handelIncreaseQuantity(item.productId._id)}
                                             >
                                                 <Text style={styles.quantityButtonText}>+</Text>
                                             </Pressable>

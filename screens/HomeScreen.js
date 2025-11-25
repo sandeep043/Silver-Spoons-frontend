@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, TextInput, Pressable, ScrollView, Image, TouchableOpacity } from "react-native"
+import { StyleSheet, Text, View, TextInput, Pressable, ScrollView, Image, TouchableOpacity, FlatList } from "react-native"
 import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchCategories, selectCategories } from '../store/categoriesSlice';
@@ -12,6 +12,8 @@ import biryaniImage from '../assets/offere banners/biryani combo.png';
 import welcomeBackImage from '../assets/offere banners/welcomeBack.png';
 
 import { getAllCategories } from "../utils/productFetch";
+import { getDefaultAddress } from "../utils/AddressFetch";
+import CombinationBreakFast from "../components/CombinationBreakFast";
 
 function HomeScreen() {
     const nav = useNavigation();
@@ -19,83 +21,44 @@ function HomeScreen() {
     const [searchText, setSearchText] = useState('');
     const dispatch = useDispatch();
     const categories = useSelector(selectCategories) ?? [];
+    const [deliveryAddress, setDeliveryAddress] = useState('Fetching default address...');
+
+    const { token } = useSelector((state) => state.auth);
 
     const rest = () => {
         setItem('onboarded', '0');
     }
 
+
+    const loadDefaultAddress = async () => {
+        try {
+            const response = await getDefaultAddress(token);
+            console.log('Default address:', response);
+            if (response.data) {
+                const addr = response.data;
+                const fullAddress = `${addr.street}, ${addr.addressLine1}`;
+                setDeliveryAddress(fullAddress);
+            }
+        } catch (error) {
+            console.error('Failed to fetch default address:', error);
+        }
+    };
+
     useEffect(() => {
+
         dispatch(fetchCategories());
+        loadDefaultAddress();
+
     }, [dispatch])
 
-
-    const combinationBreakfast = [
-        {
-            id: 1,
-            name: 'Appam & Stew - 2 nos',
-            rating: '4.5',
-            time: '30 min',
-            price: '₹ 180',
-            image: 'https://images.unsplash.com/photo-1668236543090-82eba5ee5976?w=400'
-        },
-        {
-            id: 2,
-            name: 'Idiyappam & Kadala curry - 4 nos',
-            rating: '4.5',
-            time: '30 min',
-            price: '₹ 180',
-            image: 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=400'
-        },
-        {
-            id: 3,
-            name: 'Puttu & Kadala curry - 2 nos',
-            rating: '4.5',
-            time: '30 min',
-            price: '₹ 180',
-            image: 'https://images.unsplash.com/photo-1589301773859-601c2fe8b02b?w=400'
-        },
-        {
-            id: 4,
-            name: 'Poori Masala - 2 nos',
-            rating: '4.5',
-            time: '30 min',
-            price: '₹ 180',
-            image: 'https://images.unsplash.com/photo-1642192637672-d4e7b2c60b74?w=400'
-        },
-        {
-            id: 5,
-            name: 'Idli & Sambar - 4 nos',
-            rating: '4.5',
-            time: '30 min',
-            price: '₹ 180',
-            image: 'https://images.unsplash.com/photo-1630383249896-424e482df921?w=400'
-        },
-    ];
-
-    const recommendedBreakfast = [
-        {
-            id: 1,
-            name: 'Plain Dosa - 2 nos',
-            price: '₹ 180',
-            rating: '4.5',
-            time: '30 min',
-            image: 'https://images.unsplash.com/photo-1694809434016-0c2e94b1d0c7?w=400'
-        },
-        {
-            id: 2,
-            name: 'Puttu and Kadala',
-            price: '₹ 180',
-            rating: '4.5',
-            time: '30 min',
-            image: 'https://images.unsplash.com/photo-1589301773859-601c2fe8b02b?w=400'
-        },
-    ];
 
     const handleSearch = () => {
         nav.navigate('SearchTab', { query: searchText });
 
         setSearchText('');
     }
+
+
 
 
     return (
@@ -109,7 +72,7 @@ function HomeScreen() {
                     />
                     <View>
                         <Text style={styles.deliverTo}>Deliver To</Text>
-                        <Text style={styles.location}>Palazhi , Calicut</Text>
+                        <Text style={styles.location}>{deliveryAddress}</Text>
                     </View>
                 </Pressable>
                 <Pressable style={styles.notificationIcon}>
@@ -154,80 +117,45 @@ function HomeScreen() {
 
 
                 {/* Categories Tabs */}
-                <ScrollView
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    style={styles.categoriesContainer}
-                >
-                    {categories.map((category, index) => (
-                        <Pressable
-                            key={index}
-                            style={styles.categoryTab}
-                            onPress={() => setSelectedCategory(category)}
-                        >
-                            <Text style={[
-                                styles.categoryText,
-                                selectedCategory === category && styles.categoryTextActive
-                            ]}>
-                                {category}
-                            </Text>
-                            {selectedCategory === category && (
-                                <View style={styles.categoryUnderline} />
-                            )}
-                        </Pressable>
-                    ))}
-                </ScrollView>
+                {categories && categories.length > 0 && (
+                    <FlatList
+                        data={categories}
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        style={styles.categoriesContainer}
+                        contentContainerStyle={{ paddingHorizontal: 16 }}
+                        keyExtractor={(item, index) => String(item) + index}
+                        renderItem={({ item: category }) => (
+                            <Pressable
+                                style={styles.categoryTab}
+                                onPress={() => setSelectedCategory(category)}
+                            >
+                                <Text style={[
+                                    styles.categoryText,
+                                    selectedCategory === category && styles.categoryTextActive
+                                ]}>
+                                    {category}
+                                </Text>
+                                {selectedCategory === category && (
+                                    <View style={styles.categoryUnderline} />
+                                )}
+                            </Pressable>
+                        )}
+                    />
+                )}
 
                 {/* Product menu (Frequent Orders + Menu Grid) */}
                 <ProductMenu selectedCategory={selectedCategory} />
 
-                {/* Combination Breakfast */}
-                <Text style={styles.sectionTitle}>Combination Breakfast</Text>
-                {combinationBreakfast.map((item) => (
-                    <View key={item.id} style={styles.listCard}>
-                        <Image source={{ uri: item.image }} style={styles.listImage} />
-                        <View style={styles.listContent}>
-                            <Text style={styles.listName}>{item.name}</Text>
-                            <View style={styles.listInfo}>
-                                <Text style={styles.listRating}>⭐ {item.rating}</Text>
-                                <Text style={styles.listTime}>🕐 {item.time}</Text>
-                            </View>
-                            <Text style={styles.listPrice}>{item.price}</Text>
-                        </View>
-                        <Pressable style={styles.listAddButton}>
-                            <Text style={styles.listAddButtonText}>+</Text>
-                        </Pressable>
-                    </View>
-                ))}
+                <CombinationBreakFast />
 
-                {/* Recommended Breakfast */}
-                <Text style={styles.sectionTitle}>Recommended Breakfast</Text>
-                <ScrollView
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    style={styles.recommendedContainer}
-                >
-                    {recommendedBreakfast.map((item) => (
-                        <View key={item.id} style={styles.recommendedCard}>
-                            <Image source={{ uri: item.image }} style={styles.recommendedImage} />
-                            <Text style={styles.recommendedName}>{item.name}</Text>
-                            <View style={styles.recommendedInfo}>
-                                <Text style={styles.recommendedRating}>⭐ {item.rating}</Text>
-                                <Text style={styles.recommendedTime}>🕐 {item.time}</Text>
-                            </View>
-                            <View style={styles.recommendedFooter}>
-                                <Text style={styles.recommendedPrice}>{item.price}</Text>
-                                <Pressable style={styles.recommendedAddButton}>
-                                    <Text style={styles.recommendedAddButtonText}>+</Text>
-                                </Pressable>
-                            </View>
-                        </View>
-                    ))}
-                </ScrollView>
 
-                <View style={{ height: 100 }} />
+
+
+
 
             </ScrollView>
+
             <TouchableOpacity onPress={rest} ><Text style={{ color: 'white' }} >rest</Text></TouchableOpacity>
         </View>
     );
@@ -266,6 +194,7 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: '#ffffff',
         fontWeight: '600',
+        width: 200,
     },
     notificationIcon: {
         width: 40,
