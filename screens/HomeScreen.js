@@ -1,8 +1,8 @@
-import { StyleSheet, Text, View, TextInput, Pressable, ScrollView, Image, TouchableOpacity, FlatList } from "react-native"
-import { useState } from 'react';
+import { StyleSheet, Text, View, TextInput, Pressable, Image, TouchableOpacity, FlatList } from "react-native"
+import React, { useState, useCallback, useContext } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchCategories, selectCategories } from '../store/categoriesSlice';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { setItem } from "../utils/asyncStorage";
 import Carousel from "../components/Carousel";
 import ProductMenu from "../components/ProductMenu";
@@ -13,7 +13,10 @@ import welcomeBackImage from '../assets/offere banners/welcomeBack.png';
 
 import { getAllCategories } from "../utils/productFetch";
 import { getDefaultAddress } from "../utils/AddressFetch";
+import { getCartItems } from "../utils/cartFetch";
 import CombinationBreakFast from "../components/CombinationBreakFast";
+import { CartContext } from "../context/CartContext";
+
 
 function HomeScreen() {
     const nav = useNavigation();
@@ -22,12 +25,29 @@ function HomeScreen() {
     const dispatch = useDispatch();
     const categories = useSelector(selectCategories) ?? [];
     const [deliveryAddress, setDeliveryAddress] = useState('Fetching default address...');
+    const [cartCount, setCartCount] = useState(0);
+    const { cartRefreshTrigger } = useContext(CartContext);
 
     const { token } = useSelector((state) => state.auth);
 
     const rest = () => {
         setItem('onboarded', '0');
     }
+
+    const loadCartItems = useCallback(async () => {
+        try {
+            const response = await getCartItems(token);
+            // Assuming response.data is an array of cart items or response has a count
+            const items = response?.data || response || [];
+            const count = Array.isArray(items) ? items.length : 0;
+            setCartCount(count);
+        } catch (error) {
+            console.error('Failed to fetch cart items:', error);
+        }
+    }, [token]);
+
+
+
 
 
     const loadDefaultAddress = async () => {
@@ -48,8 +68,23 @@ function HomeScreen() {
 
         dispatch(fetchCategories());
         loadDefaultAddress();
+        loadCartItems();
 
     }, [dispatch])
+
+    // Refresh cart count when screen is focused
+    useFocusEffect(
+        React.useCallback(() => {
+            loadCartItems();
+        }, [loadCartItems])
+    );
+
+    // Listen for cart refresh trigger from child components
+    useEffect(() => {
+        if (cartRefreshTrigger > 0) {
+            loadCartItems();
+        }
+    }, [cartRefreshTrigger, loadCartItems]);
 
 
     const handleSearch = () => {
@@ -75,89 +110,98 @@ function HomeScreen() {
                         <Text style={styles.location}>{deliveryAddress}</Text>
                     </View>
                 </Pressable>
-                <Pressable style={styles.notificationIcon}>
+                {/* <Pressable style={styles.notificationIcon}>
                     <Text style={styles.bellIcon}>🔔</Text>
+                </Pressable> */}
+                <Pressable style={styles.cartIconContainer} onPress={() => nav.navigate('Cart')}>
+                    <Text style={styles.cartIcon}>🛒</Text>
+                    {cartCount > 0 && (
+                        <View style={styles.cartBadge}>
+                            <Text style={styles.cartBadgeText}>{cartCount}</Text>
+                        </View>
+                    )}
                 </Pressable>
             </View>
 
-            <ScrollView showsVerticalScrollIndicator={false}>
-                {/* Search Bar */}
-                <View style={styles.searchContainer}>
-                    <TextInput
-                        style={styles.searchInput}
-                        placeholder="Search"
-                        placeholderTextColor="#6b7280"
-                        value={searchText}
-                        onChangeText={(text) => setSearchText(text)}
-                        onSubmitEditing={handleSearch}
-                    />
-                    <Pressable style={styles.searchIcon} onPress={handleSearch}>
-                        <Text>🔍</Text>
-                    </Pressable>
-                </View>
-
-                {/* Banner Carousel */}
-                <View style={styles.bannerWrapper}>
-                    <Carousel dotCount={2}>
-                        <View style={[styles.banner, styles.banner2]}>
-                            <Image
-                                source={welcomeBackImage}
-                                style={styles.bannerImageFull}
+            <FlatList
+                data={[]}
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={{ paddingBottom: 24 }}
+                ListHeaderComponent={() => (
+                    <>
+                        {/* Search Bar */}
+                        <View style={styles.searchContainer}>
+                            <TextInput
+                                style={styles.searchInput}
+                                placeholder="Search"
+                                placeholderTextColor="#6b7280"
+                                value={searchText}
+                                onChangeText={(text) => setSearchText(text)}
+                                onSubmitEditing={handleSearch}
                             />
-                        </View>
-
-                        <View style={[styles.banner, styles.banner2]}>
-                            <Image
-                                source={biryaniImage}
-                                style={styles.bannerImageFull}
-                            />
-                        </View>
-                    </Carousel>
-                </View>
-
-
-                {/* Categories Tabs */}
-                {categories && categories.length > 0 && (
-                    <FlatList
-                        data={categories}
-                        horizontal
-                        showsHorizontalScrollIndicator={false}
-                        style={styles.categoriesContainer}
-                        contentContainerStyle={{ paddingHorizontal: 16 }}
-                        keyExtractor={(item, index) => String(item) + index}
-                        renderItem={({ item: category }) => (
-                            <Pressable
-                                style={styles.categoryTab}
-                                onPress={() => setSelectedCategory(category)}
-                            >
-                                <Text style={[
-                                    styles.categoryText,
-                                    selectedCategory === category && styles.categoryTextActive
-                                ]}>
-                                    {category}
-                                </Text>
-                                {selectedCategory === category && (
-                                    <View style={styles.categoryUnderline} />
-                                )}
+                            <Pressable style={styles.searchIcon} onPress={handleSearch}>
+                                <Text>🔍</Text>
                             </Pressable>
+                        </View>
+
+                        {/* Banner Carousel */}
+                        <View style={styles.bannerWrapper}>
+                            <Carousel dotCount={2}>
+                                <View style={[styles.banner, styles.banner2]}>
+                                    <Image
+                                        source={welcomeBackImage}
+                                        style={styles.bannerImageFull}
+                                    />
+                                </View>
+
+                                <View style={[styles.banner, styles.banner2]}>
+                                    <Image
+                                        source={biryaniImage}
+                                        style={styles.bannerImageFull}
+                                    />
+                                </View>
+                            </Carousel>
+                        </View>
+
+
+                        {/* Categories Tabs */}
+                        {categories && categories.length > 0 && (
+                            <FlatList
+                                data={categories}
+                                horizontal
+                                showsHorizontalScrollIndicator={false}
+                                style={styles.categoriesContainer}
+                                contentContainerStyle={{ paddingHorizontal: 16 }}
+                                keyExtractor={(item, index) => String(item) + index}
+                                renderItem={({ item: category }) => (
+                                    <Pressable
+                                        style={styles.categoryTab}
+                                        onPress={() => setSelectedCategory(category)}
+                                    >
+                                        <Text style={[
+                                            styles.categoryText,
+                                            selectedCategory === category && styles.categoryTextActive
+                                        ]}>
+                                            {category}
+                                        </Text>
+                                        {selectedCategory === category && (
+                                            <View style={styles.categoryUnderline} />
+                                        )}
+                                    </Pressable>
+                                )}
+                            />
                         )}
-                    />
+
+                        {/* Product menu (Frequent Orders + Menu Grid) */}
+                        <ProductMenu selectedCategory={selectedCategory} />
+
+                        <CombinationBreakFast />
+                    </>
                 )}
-
-                {/* Product menu (Frequent Orders + Menu Grid) */}
-                <ProductMenu selectedCategory={selectedCategory} />
-
-                <CombinationBreakFast />
-
-
-
-
-
-
-            </ScrollView>
+            />
 
             <TouchableOpacity onPress={rest} ><Text style={{ color: 'white' }} >rest</Text></TouchableOpacity>
-        </View>
+        </View >
     );
 }
 
@@ -204,6 +248,32 @@ const styles = StyleSheet.create({
     },
     bellIcon: {
         fontSize: 20,
+    },
+    cartIconContainer: {
+        width: 40,
+        height: 40,
+        justifyContent: 'center',
+        alignItems: 'center',
+        position: 'relative',
+    },
+    cartIcon: {
+        fontSize: 20,
+    },
+    cartBadge: {
+        position: 'absolute',
+        top: -5,
+        right: -5,
+        backgroundColor: '#ef4444',
+        borderRadius: 10,
+        width: 20,
+        height: 20,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    cartBadgeText: {
+        color: '#ffffff',
+        fontSize: 12,
+        fontWeight: '700',
     },
     searchContainer: {
         flexDirection: 'row',

@@ -3,6 +3,8 @@ import { useState, useEffect } from 'react';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { searchProducts } from '../utils/productFetch';
 import { getAllCategories } from "../utils/productFetch";
+import { addItemToCart } from '../utils/cartFetch';
+import { useSelector } from 'react-redux';
 
 function SearchScreen() {
     const nav = useNavigation();
@@ -12,7 +14,7 @@ function SearchScreen() {
     const [allItems, setAllItems] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
-
+    const { token } = useSelector((state) => state.auth);
 
     //get query from navigation params
     useEffect(() => {
@@ -120,6 +122,13 @@ function SearchScreen() {
         setShowSortDropdown(false);
         // The useEffect will automatically trigger the search with new sort
     };
+
+    const handleAddtoCart = async (itemId) => {
+        // Implement add to cart functionality here
+        const response = await addItemToCart(itemId, token);
+        console.log('Add to cart response:', response);
+    }
+
 
     return (
         <View style={styles.container}>
@@ -263,7 +272,7 @@ function SearchScreen() {
                                             </View>
                                             <View style={styles.resultRight}>
                                                 <Text style={styles.resultPrice}>{item.price}</Text>
-                                                <Pressable style={styles.addButton}>
+                                                <Pressable style={styles.addButton} onPress={() => handleAddtoCart(item._id)} >
                                                     <Text style={styles.addButtonText}>+</Text>
                                                 </Pressable>
                                             </View>

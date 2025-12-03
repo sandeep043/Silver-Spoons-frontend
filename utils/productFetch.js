@@ -1,4 +1,4 @@
-import axios from "axios";
+import axiosInstance from "./axiosInstance";
 
 /**
  * Fetch products using query params. Calls backend GET /api/products/search
@@ -10,7 +10,7 @@ const productFetchOnCategory = async (category) => {
             throw new Error('category is required');
         }
         console.log('Fetching products for category:', category);
-        const response = await axios.get(`http://10.0.2.2:4000/api/products/search`, {
+        const response = await axiosInstance.get(`/api/products/search`, {
             params: { category },
             headers: { 'Content-Type': 'application/json' },
         });
@@ -18,20 +18,20 @@ const productFetchOnCategory = async (category) => {
         return response.data;
     } catch (error) {
         console.error('productFetchOnCategory error:', error.response?.data || error.message || error);
-        throw error;
+
     }
 };
 
 const getAllCategories = async () => {
     try {
-        const response = await axios.get(`http://10.0.2.2:4000/api/products/categories`, {
+        const response = await axiosInstance.get(`/api/products/categories`, {
             headers: { 'Content-Type': 'application/json' },
         });
 
         return response.data.data;
     } catch (error) {
         console.error('getAllCategories error:', error.response?.data || error.message || error);
-        throw error;
+
     }
 };
 
@@ -66,7 +66,7 @@ const searchProducts = async (options = {}) => {
         if (order) params.order = order;
 
         console.log('Searching products with params:', params);
-        const response = await axios.get(`http://10.0.2.2:4000/api/products/search`, {
+        const response = await axiosInstance.get(`/api/products/search`, {
             params,
             headers: { 'Content-Type': 'application/json' },
         });
@@ -78,19 +78,18 @@ const searchProducts = async (options = {}) => {
         return { products, meta, raw: resp };
     } catch (error) {
         console.error('searchProducts error:', error.response?.data || error.message || error);
-        throw error;
     }
 };
 
 const getAllComboCategories = async () => {
     try {
-        const response = await axios.get(`http://10.0.2.2:4000/api/products/combo-categories`, {
+        const response = await axiosInstance.get(`/api/products/combo-categories`, {
             headers: { 'Content-Type': 'application/json' },
         });
         return response.data;
     } catch (error) {
         console.error('getAllComboCategories error:', error.response?.data || error.message || error);
-        throw error;
+
     }
 };
 

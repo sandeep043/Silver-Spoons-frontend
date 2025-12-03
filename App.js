@@ -10,6 +10,7 @@ import { store } from './store/store';
 import { Provider } from 'react-redux';
 import OnboardingScreen from './screens/OnboardingScreen';
 import { useEffect, useState } from 'react';
+import { createNavigationContainerRef } from '@react-navigation/native';
 import VerifyOTPScreen from './screens/VerifyOTP';
 import HomeScreen from './screens/HomeScreen';
 import CartScreen from './screens/CartScreen';
@@ -23,9 +24,11 @@ import AddressScreen from './screens/AddressScreen';
 import PaymentScreen from './screens/PaymentScreen';
 import PaymentResult from './screens/PaymentResultScreen';
 import ProductViewScreen from './screens/ProductViewScreen';
+import { CartProvider } from './context/CartContext';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
+const navigationRef = createNavigationContainerRef();
 
 // Tab Navigator for Home screens
 function HomeTabs() {
@@ -104,6 +107,17 @@ function RootNavigator() {
     checkIfAlreadyOnboarded();
   }, []);
 
+  // Handle navigation reset when user logs out
+  useEffect(() => {
+    if (!isAuthenticated && navigationRef.current && showOnboarding === false) {
+      console.log('User logged out - resetting navigation to Login');
+      navigationRef.current.reset({
+        index: 0,
+        routes: [{ name: 'Login' }],
+      });
+    }
+  }, [isAuthenticated, showOnboarding]);
+
   const checkIfAlreadyOnboarded = async () => {
     try {
       let onboarded = await AsyncStorage.getItem('onboarded');
@@ -155,7 +169,7 @@ function RootNavigator() {
   // After onboarding - check if user is authenticated
   else {
     return (
-      <NavigationContainer>
+      <NavigationContainer ref={navigationRef}>
         {isAuthenticated ? (
           // User is logged in - show Home with protected screens
           <Stack.Navigator initialRouteName='Home'>
@@ -185,9 +199,13 @@ function RootNavigator() {
 
 // Main App component with Provider wrapper
 export default function App() {
+
+
   return (
     <Provider store={store}>
-      <RootNavigator />
+      <CartProvider>
+        <RootNavigator />
+      </CartProvider>
     </Provider>
   );
 }

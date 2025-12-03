@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axiosInstance from './axiosInstance';
 
 
 const addItemToCart = async (item_id, token) => {
@@ -7,19 +7,18 @@ const addItemToCart = async (item_id, token) => {
             throw new Error('Valid item with id is required');
         }
 
-        const response = await axios.post(`http://10.0.2.2:4000/api/cart/add`, {
+        const response = await axiosInstance.post(`/api/cart/add`, {
             productId: item_id
         }, {
-
             headers: {
                 'Content-Type': 'application/json',
-                Authorization: `Bearer ${token}` // if using JWT auth
+                Authorization: `Bearer ${token}`
             }
         });
         return response.data;
     } catch (error) {
         console.error('addItemToCart error:', error.response?.data || error.message || error);
-        throw error;
+
     }
 };
 
@@ -28,27 +27,25 @@ const decreaseQuantity = async (itemId, token) => {
         if (!itemId) {
             throw new Error('Valid itemId is required');
         }
-        const response = await axios.post(`http://10.0.2.2:4000/api/cart/decrease`, {
+        const response = await axiosInstance.post(`/api/cart/decrease`, {
             productId: itemId,
         }, {
             headers: {
                 'Content-Type': 'application/json',
-                Authorization: `Bearer ${token}` // if using JWT auth
+                Authorization: `Bearer ${token}`
             },
         });
         return response.data;
     } catch (error) {
         console.error('decreaseQuantity error:', error.response?.data || error.message || error);
-        throw error;
+
     }
 };
 
 
 const removeItemFromCart = async (itemId, token) => {
     try {
-        // axios.delete accepts (url, config). To send a request body with DELETE,
-        // include the body in the `data` field of the config object.
-        const response = await axios.delete(`http://10.0.2.2:4000/api/cart/remove`, {
+        const response = await axiosInstance.delete(`/api/cart/remove`, {
             data: { productId: itemId },
             headers: {
                 'Content-Type': 'application/json',
@@ -58,22 +55,22 @@ const removeItemFromCart = async (itemId, token) => {
         return response.data;
     } catch (error) {
         console.error('removeItemFromCart error:', error.response?.data || error.message || error);
-        throw error;
+
     }
 };
 
 const getCartItems = async (token) => {
     try {
-        const response = await axios.get(`http://10.0.2.2:4000/api/cart/`, {
+        const response = await axiosInstance.get(`/api/cart/`, {
             headers: {
                 'Content-Type': 'application/json',
-                Authorization: `Bearer ${token}` // if using JWT auth
+                Authorization: `Bearer ${token}`
             },
         });
         return response.data;
     } catch (error) {
         console.error('getCartItems error:', error.response?.data || error.message || error);
-        throw error;
+
     }
 };
 

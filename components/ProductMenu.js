@@ -1,14 +1,16 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import { View, ScrollView, Text, Pressable, Image, StyleSheet, ImageBackground } from "react-native";
 import ShimmerPlaceHolder from "react-native-shimmer-placeholder";
 import { productFetchOnCategory } from "../utils/productFetch";
 import { addItemToCart } from "../utils/cartFetch";
 import { useSelector } from "react-redux";
 import { useNavigation } from "@react-navigation/native";
+import { CartContext } from "../context/CartContext";
 
 function ProductMenu({ selectedCategory: selectedCategoryProp }) {
 
     const nav = useNavigation();
+    const { triggerCartRefresh } = useContext(CartContext);
     const [selectedCategory, setSelectedCategory] = useState('veg');
     useEffect(() => {
         if (selectedCategoryProp && selectedCategoryProp !== selectedCategory) {
@@ -26,6 +28,8 @@ function ProductMenu({ selectedCategory: selectedCategoryProp }) {
 
         const response = await addItemToCart(itemId, token);
         console.log('Add to cart response:', response);
+        // Trigger cart refresh in HomeScreen
+        triggerCartRefresh();
 
     }
 

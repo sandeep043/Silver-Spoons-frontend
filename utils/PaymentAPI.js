@@ -1,14 +1,11 @@
-import axios from 'axios';
+import axiosInstance from './axiosInstance';
 
 
 export const api = (token) => {
-    const instance = axios.create({
-        baseURL: `http://10.0.2.2:4000/api`,
-        headers: {
-            'Content-Type': 'application/json',
-            ...(token ? { Authorization: `Bearer ${token}` } : {})
-        },
-        timeout: 20000
-    });
+    // Create a new instance that includes the token in auth header
+    const instance = axiosInstance;
+    if (token) {
+        instance.defaults.headers.Authorization = `Bearer ${token}`;
+    }
     return instance;
 };

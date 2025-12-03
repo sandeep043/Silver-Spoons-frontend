@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import { View, Text, FlatList, Image, Pressable, StyleSheet } from 'react-native';
 import ShimmerPlaceHolder from 'react-native-shimmer-placeholder';
 import { getAllComboCategories } from '../utils/productFetch';
 import { productFetchOnCategory } from '../utils/productFetch';
 import { addItemToCart } from '../utils/cartFetch';
 import { useSelector } from 'react-redux';
+import { CartContext } from '../context/CartContext';
 
 export default function CombinationBreakFast({ selectedCategory: selectedCategoryProp }) {
     const [comboItems, setComboItems] = useState([]);
@@ -12,6 +13,7 @@ export default function CombinationBreakFast({ selectedCategory: selectedCategor
     const [error, setError] = useState('');
     const [selectedCategory, setSelectedCategory] = useState(selectedCategoryProp || null);
     const [categories, setCategories] = useState([]);
+    const { triggerCartRefresh } = useContext(CartContext);
 
     const { token } = useSelector((state) => state.auth || {});
 
@@ -21,6 +23,8 @@ export default function CombinationBreakFast({ selectedCategory: selectedCategor
             if (!id) return;
             const response = await addItemToCart(id, token);
             console.log('Add to cart response:', response);
+            // Trigger cart refresh in HomeScreen
+            triggerCartRefresh();
         } catch (err) {
             console.error('Add to cart failed', err);
         }
