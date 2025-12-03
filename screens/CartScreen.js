@@ -307,6 +307,14 @@ function CartScreen() {
                                 </Pressable>
                             )}
                         />
+                        <View>
+                            <Pressable style={styles.addButtonModal} onPress={() => {
+                                setShowAddressModal(false);
+                                nav.navigate('AddAddress');
+                            }}>
+                                <Text style={styles.addButtonTextModal}>Add New Address</Text>
+                            </Pressable>
+                        </View>
                     </View>
                 </View>
             </Modal>
@@ -634,4 +642,18 @@ const styles = StyleSheet.create({
         paddingVertical: 2,
         borderRadius: 4,
     },
+    addButtonModal: {
+        backgroundColor: '#26469d',
+        marginHorizontal: 16,
+        paddingVertical: 14,
+        borderRadius: 12,
+        alignItems: 'center',
+        marginTop: 10,
+    },
+    addButtonTextModal: {
+        fontSize: 16,
+        color: '#ffffff',
+        fontWeight: '500',
+    },
+
 });

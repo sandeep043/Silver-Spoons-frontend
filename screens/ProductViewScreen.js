@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View, Pressable, ScrollView, Image, Dimensions } from "react-native"
-import { useState } from 'react';
-import { useNavigation, useRoute } from '@react-navigation/native';
-import { addItemToCart } from "../utils/cartFetch";
+import { useState, useEffect, useCallback } from 'react';
+import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
+import { addItemToCart, getCartItems, decreaseQuantity } from "../utils/cartFetch";
 import { useSelector } from "react-redux";
 
 const { width } = Dimensions.get('window');
@@ -15,11 +15,62 @@ function ProductViewScreen() {
     const product = route.params?.product || null;
     console.log(product)
     const [quantity, setQuantity] = useState(1);
+    const [cartItems, setCartItems] = useState([]);
+    const [productQuantityInCart, setProductQuantityInCart] = useState(0);
+
+    // Fetch cart items to check if product is already in cart
+    const loadCartItems = useCallback(async () => {
+        try {
+            const response = await getCartItems(token);
+            const items = response?.data || [];
+            setCartItems(items);
+
+            // Check if current product is in cart
+            if (product && product._id) {
+                const cartItem = items.find(item => item.productId._id === product._id);
+                setProductQuantityInCart(cartItem ? cartItem.quantity : 0);
+            }
+        } catch (error) {
+            console.error('Failed to fetch cart items:', error);
+        }
+    }, [token, product]);
+
+    // Load cart on mount and when screen is focused
+    useEffect(() => {
+        loadCartItems();
+    }, [loadCartItems]);
+
+    useFocusEffect(
+        useCallback(() => {
+            loadCartItems();
+        }, [loadCartItems])
+    );
 
     const addToCart = async (itemId) => {
-        // Add to cart logic here
-        const response = await addItemToCart(itemId, token);
-        alert(`Added ${quantity} ${product.name} to cart!`);
+        try {
+            await addItemToCart(itemId, token);
+            loadCartItems(); // Reload cart to update quantity
+        } catch (error) {
+            console.error('Error adding to cart:', error);
+        }
+    };
+
+    const handleIncreaseQuantity = async (itemId) => {
+        try {
+            await addItemToCart(itemId, token);
+            loadCartItems();
+        } catch (error) {
+            console.error('Failed to increase quantity:', error);
+        }
+    };
+
+    const handleDecreaseQuantity = async (itemId) => {
+        try {
+            await decreaseQuantity(itemId, token);
+            loadCartItems();
+        } catch (error) {
+            console.error('Failed to decrease quantity:', error);
+        }
     };
 
     //   const handleAddCart = async (itemId) => {
@@ -50,14 +101,7 @@ function ProductViewScreen() {
                 <Pressable onPress={() => nav.goBack()} style={styles.headerButton}>
                     <Text style={styles.headerIcon}>←</Text>
                 </Pressable>
-                <View style={styles.headerRight}>
-                    <Pressable style={styles.headerButton}>
-                        <Text style={styles.headerIcon}>🔍</Text>
-                    </Pressable>
-                    <Pressable style={styles.headerButton} onPress={() => nav.navigate('Cart')}>
-                        <Text style={styles.headerIcon}>🛒</Text>
-                    </Pressable>
-                </View>
+
             </View>
 
             <ScrollView showsVerticalScrollIndicator={false}>
@@ -117,21 +161,32 @@ function ProductViewScreen() {
                                 <Text style={styles.nutritionValue}>{product.grams ?? '-'}</Text>
                                 <Text style={styles.nutritionLabel}>grams</Text>
                             </View>
-                            {/* <View style={styles.nutritionItem}>
-                                <Text style={styles.nutritionValue}>{product.nutrition.fat ?? '-'}</Text>
-                                <Text style={styles.nutritionLabel}>Fat</Text>
-                            </View>
-                            <View style={styles.nutritionItem}>
-                                <Text style={styles.nutritionValue}>{product.nutrition.protein ?? '-'}</Text>
-                                <Text style={styles.nutritionLabel}>Protein</Text>
-                            </View> */}
+
                         </View>
                     )}
 
-                    {/* Add to Cart Button */}
-                    <Pressable style={styles.addToCartButton} onPress={addToCart(product._id)}>
-                        <Text style={styles.addToCartText}>ADD TO CART</Text>
-                    </Pressable>
+                    {/* Add to Cart Button or Quantity Controls */}
+                    {productQuantityInCart === 0 ? (
+                        <Pressable style={styles.addToCartButton} onPress={() => addToCart(product._id)}>
+                            <Text style={styles.addToCartText}>ADD TO CART</Text>
+                        </Pressable>
+                    ) : (
+                        <View style={styles.quantityControlContainer}>
+                            <Pressable
+                                style={styles.quantityButton}
+                                onPress={() => handleDecreaseQuantity(product._id)}
+                            >
+                                <Text style={styles.quantityButtonText}>-</Text>
+                            </Pressable>
+                            <Text style={styles.quantityDisplayText}>{productQuantityInCart}</Text>
+                            <Pressable
+                                style={styles.quantityButton}
+                                onPress={() => handleIncreaseQuantity(product._id)}
+                            >
+                                <Text style={styles.quantityButtonText}>+</Text>
+                            </Pressable>
+                        </View>
+                    )}
 
                     {/* Ingredients */}
                     {product.ingredients && product.ingredients.length > 0 && (
@@ -391,5 +446,34 @@ const styles = StyleSheet.create({
     },
     reviewStars: {
         flexDirection: 'row',
+    },
+    quantityControlContainer: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+        gap: 16,
+        paddingVertical: 16,
+        borderRadius: 12,
+        marginBottom: 32,
+    },
+    quantityButton: {
+        width: 44,
+        height: 44,
+        backgroundColor: '#16a34a',
+        borderRadius: 8,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    quantityButtonText: {
+        fontSize: 20,
+        color: '#ffffff',
+        fontWeight: '600',
+    },
+    quantityDisplayText: {
+        fontSize: 18,
+        color: '#ffffff',
+        fontWeight: '600',
+        minWidth: 40,
+        textAlign: 'center',
     },
 });
