@@ -10,8 +10,8 @@ const PaymentScreen = ({ route, navigation }) => {
     const params = route?.params ?? {};
     const order = params.order ?? {
         amount: params.amount,
-        cartItems: params.cartItems,
-        orderItems: params.orderItems,
+        orderItems: params.cartItems,
+        address: params.address
     };
     console.log('PaymentScreen order:', order, 'params:', params);
     const [loading, setLoading] = useState(false);
@@ -23,7 +23,7 @@ const PaymentScreen = ({ route, navigation }) => {
     // Replace with your auth token retrieval
     const { token } = useSelector((state) => state.auth);
 
-    const Details = { firstname: "sandeep", email: "sandeep.talari8999@gmail.com", phone: "6006782936", address: "123 Main Street, Calicut" };
+    const Details = { firstname: "sandeep", email: "sandeep.talari8999@gmail.com", phone: "6006782936", address: order.address || "123, Main Street, City" };
 
     const initiate = async () => {
         setLoading(true);
@@ -39,7 +39,7 @@ const PaymentScreen = ({ route, navigation }) => {
 
             const payload = {
                 amount: order.amount,
-                product: order.cartItems || { name: 'Food Order' },
+                product: { name: 'Food Order' },
                 firstname: Details.firstname,
                 email: Details.email,
                 mobile: Details.phone,
