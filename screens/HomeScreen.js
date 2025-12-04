@@ -7,6 +7,12 @@ import { setItem } from "../utils/asyncStorage";
 import Carousel from "../components/Carousel";
 import ProductMenu from "../components/ProductMenu";
 import { useEffect } from "react";
+import { MapPinHouse, ShoppingCart } from 'lucide-react-native';
+
+
+
+
+
 
 import biryaniImage from '../assets/offere banners/biryani combo.png';
 import welcomeBackImage from '../assets/offere banners/welcomeBack.png';
@@ -100,21 +106,17 @@ function HomeScreen() {
         <View style={styles.container}>
             {/* Header */}
             <View style={styles.header}>
-                <Pressable style={styles.headerLeft} onPress={() => nav.navigate('Profile')}>
-                    <Image
-                        source={{ uri: 'https://i.pravatar.cc/100' }}
-                        style={styles.avatar}
-                    />
+                <Pressable style={styles.headerLeft} onPress={() => nav.navigate('Address')}>
+                    <MapPinHouse style={styles.avatar} color="#6b7280" size={28} />
                     <View>
                         <Text style={styles.deliverTo}>Deliver To</Text>
                         <Text style={styles.location}>{deliveryAddress}</Text>
                     </View>
                 </Pressable>
-                {/* <Pressable style={styles.notificationIcon}>
-                    <Text style={styles.bellIcon}>🔔</Text>
-                </Pressable> */}
+
                 <Pressable style={styles.cartIconContainer} onPress={() => nav.navigate('Cart')}>
-                    <Text style={styles.cartIcon}>🛒</Text>
+                    <ShoppingCart style={styles.cartIcon} color="#6b7280" size={28} />
+
                     {cartCount > 0 && (
                         <View style={styles.cartBadge}>
                             <Text style={styles.cartBadgeText}>{cartCount}</Text>
@@ -200,7 +202,9 @@ function HomeScreen() {
                 )}
             />
 
-            <TouchableOpacity onPress={rest} ><Text style={{ color: 'white' }} >rest</Text></TouchableOpacity>
+            <TouchableOpacity onPress={rest}>
+                <Text style={{ color: 'white' }}>Reset</Text>
+            </TouchableOpacity>
         </View >
     );
 }

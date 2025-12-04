@@ -14,6 +14,7 @@ import { createNavigationContainerRef } from '@react-navigation/native';
 import VerifyOTPScreen from './screens/VerifyOTP';
 import HomeScreen from './screens/HomeScreen';
 import CartScreen from './screens/CartScreen';
+import ErrorScreen from './screens/ErrorScreen';
 
 import SettingScreen from './screens/SettingScreen';
 import ProfileScreen from './screens/ProfileScreen';
@@ -25,10 +26,49 @@ import PaymentScreen from './screens/PaymentScreen';
 import PaymentResult from './screens/PaymentResultScreen';
 import ProductViewScreen from './screens/ProductViewScreen';
 import { CartProvider } from './context/CartContext';
+import OrderHistoryScreen from './screens/OrderHistoryScreen';
+
+import { House, Settings, CircleUserRound, Search } from 'lucide-react-native';
+
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 const navigationRef = createNavigationContainerRef();
+
+// Error boundary to catch render errors and navigate to the dedicated Error screen
+class ErrorBoundary extends (require('react').Component) {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null, navigated: false };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, info) {
+    console.error('Uncaught error:', error, info);
+    // Try to navigate to the Error screen once
+    try {
+      if (navigationRef && navigationRef.current && !this.state.navigated) {
+        navigationRef.current.navigate('Error', { error: String(error) });
+        this.setState({ navigated: true });
+      }
+    } catch (e) {
+      console.warn('Could not navigate to Error screen from ErrorBoundary', e);
+    }
+  }
+
+  render() {
+    // When an error happens, the app will navigate to the `Error` screen.
+    // We render nothing here to avoid duplicate UI.
+    if (this.state.hasError) {
+      return null;
+    }
+
+    return this.props.children;
+  }
+}
 
 // Tab Navigator for Home screens
 function HomeTabs() {
@@ -52,7 +92,7 @@ function HomeTabs() {
         tabBarIconStyle: {
           marginTop: 4,
         },
-        tabBarActiveTintColor: '#26469d',
+        tabBarActiveTintColor: '#ac3636ff',
         tabBarInactiveTintColor: '#ffffff',
       }}
     >
@@ -62,7 +102,7 @@ function HomeTabs() {
         options={{
           title: 'Home',
           tabBarLabel: 'Home',
-          tabBarIcon: ({ color }) => <Text style={{ fontSize: 24 }}>🏠</Text>,
+          tabBarIcon: ({ color }) => <House color={color} />,
         }}
       />
       <Tab.Screen
@@ -71,16 +111,16 @@ function HomeTabs() {
         options={{
           title: 'Search',
           tabBarLabel: 'Search',
-          tabBarIcon: ({ color }) => <Text style={{ fontSize: 24 }}>S</Text>,
+          tabBarIcon: ({ color }) => <Search color={color} />,
         }}
       />
       <Tab.Screen
-        name="CartTab"
-        component={CartScreen}
+        name="ProfileTab"
+        component={ProfileScreen}
         options={{
-          title: 'Cart',
-          tabBarLabel: 'Cart',
-          tabBarIcon: ({ color }) => <Text style={{ fontSize: 24 }}>🛒</Text>,
+          title: 'Profile',
+          tabBarLabel: 'Profile',
+          tabBarIcon: ({ color }) => <CircleUserRound color={color} />,
         }}
       />
       <Tab.Screen
@@ -89,7 +129,7 @@ function HomeTabs() {
         options={{
           title: 'Settings',
           tabBarLabel: 'Settings',
-          tabBarIcon: ({ color }) => <Text style={{ fontSize: 24 }}>⚙️</Text>,
+          tabBarIcon: ({ color }) => <Settings color={color} />,
         }}
       />
     </Tab.Navigator>
@@ -149,7 +189,19 @@ function RootNavigator() {
   // Onboarding flow (user hasn't onboarded yet)
   if (showOnboarding) {
     return (
-      <NavigationContainer>
+      <NavigationContainer
+        ref={navigationRef}
+        onUnhandledAction={(action) => {
+          console.warn('Unhandled navigation action:', action);
+          try {
+            if (navigationRef && navigationRef.current) {
+              navigationRef.current.navigate('Error', { error: action.type || JSON.stringify(action) });
+            }
+          } catch (e) {
+            console.warn('Failed to navigate to Error screen for unhandled action', e);
+          }
+        }}
+      >
         <Stack.Navigator initialRouteName='Onboarding'>
           <Stack.Screen name="Onboarding" options={{ headerShown: false }} component={OnboardingScreen} />
           <Stack.Screen name="Login" options={{ headerShown: false }} component={LoginScreen} />
@@ -161,6 +213,7 @@ function RootNavigator() {
           <Stack.Screen name="Cart" options={{ headerShown: false }} component={CartScreen} />
           <Stack.Screen name="Settings" options={{ headerShown: false }} component={SettingScreen} />
           <Stack.Screen name="Profile" options={{ headerShown: false }} component={ProfileScreen} />
+          <Stack.Screen name="Error" options={{ headerShown: false }} component={ErrorScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     );
@@ -169,7 +222,19 @@ function RootNavigator() {
   // After onboarding - check if user is authenticated
   else {
     return (
-      <NavigationContainer ref={navigationRef}>
+      <NavigationContainer
+        ref={navigationRef}
+        onUnhandledAction={(action) => {
+          console.warn('Unhandled navigation action:', action);
+          try {
+            if (navigationRef && navigationRef.current) {
+              navigationRef.current.navigate('Error', { error: action.type || JSON.stringify(action) });
+            }
+          } catch (e) {
+            console.warn('Failed to navigate to Error screen for unhandled action', e);
+          }
+        }}
+      >
         {isAuthenticated ? (
           // User is logged in - show Home with protected screens
           <Stack.Navigator initialRouteName='Home'>
@@ -182,14 +247,17 @@ function RootNavigator() {
             <Stack.Screen name="Payment" options={{ headerShown: false }} component={PaymentScreen} />
             <Stack.Screen name="PaymentResult" options={{ headerShown: false }} component={PaymentResult} />
             <Stack.Screen name="ProductView" options={{ headerShown: false }} component={ProductViewScreen} />
+            <Stack.Screen name="Error" options={{ headerShown: false }} component={ErrorScreen} />
+            <Stack.Screen name="OrderHistory" options={{ headerShown: false }} component={OrderHistoryScreen} />
+
           </Stack.Navigator>
         ) : (
           // User is not logged in - show Login/SignUp screens
           <Stack.Navigator initialRouteName='Login'>
-            <Stack.Screen name="Home" options={{ headerShown: false }} component={HomeTabs} />
             <Stack.Screen name="Login" options={{ headerShown: false }} component={LoginScreen} />
             <Stack.Screen name="SignUp" options={{ headerShown: false }} component={SignUpScreen} />
             <Stack.Screen name="VerifyOTP" options={{ headerShown: false }} component={VerifyOTPScreen} />
+            <Stack.Screen name="Error" options={{ headerShown: false }} component={ErrorScreen} />
           </Stack.Navigator>
         )}
       </NavigationContainer>
@@ -204,7 +272,9 @@ export default function App() {
   return (
     <Provider store={store}>
       <CartProvider>
-        <RootNavigator />
+        <ErrorBoundary>
+          <RootNavigator />
+        </ErrorBoundary>
       </CartProvider>
     </Provider>
   );

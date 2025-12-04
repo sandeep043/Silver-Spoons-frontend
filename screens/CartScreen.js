@@ -267,7 +267,7 @@ function CartScreen() {
 
                     {/* Proceed to Pay Button */}
                     <View style={styles.bottomContainer}>
-                        <Pressable style={styles.proceedButton} onPress={() => nav.navigate('Payment', { amount: grandTotal, cartItems: cartItems })}>
+                        <Pressable style={styles.proceedButton} onPress={() => nav.navigate('Payment', { amount: grandTotal, cartItems: cartItems, address: deliveryAddress })}>
                             <Text style={styles.proceedButtonText}>PROCEED TO PAY</Text>
                         </Pressable>
                     </View>

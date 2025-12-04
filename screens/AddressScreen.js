@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, FlatList, Pressable } from 'react-native'
 import { useEffect, useState, useCallback } from 'react';
 import { getAllAddresses } from '../utils/AddressFetch';
 import { useSelector } from 'react-redux';
+import { Trash, SquarePen } from 'lucide-react-native';
 
 function AddressScreen() {
     const nav = useNavigation();
@@ -47,10 +48,12 @@ function AddressScreen() {
                         </View>
                         <View style={styles.buttonContainer}>
                             <Pressable style={styles.editButton}>
-                                <Text style={styles.buttonIcon}>✏️</Text>
+
+                                <SquarePen color="#6b7280" style={styles.buttonIcon} />
                             </Pressable>
                             <Pressable style={styles.deleteButton}>
-                                <Text style={styles.buttonIcon}>🗑️</Text>
+                                <Trash color='#f70808' style={styles.buttonIcon} />
+
                             </Pressable>
                         </View>
                     </View>
@@ -60,7 +63,7 @@ function AddressScreen() {
                 }
             />
             <Pressable style={styles.addButton} onPress={() => nav.navigate('AddAddress')}>
-                <Text style={styles.addButtonText}>+ Add New Location</Text>
+                <Text style={styles.addButtonText}>Add New Location</Text>
             </Pressable>
         </View>
     )
@@ -148,7 +151,7 @@ const styles = StyleSheet.create({
         marginTop: 4,
     },
     editButton: {
-        backgroundColor: '#1f2937',
+
         paddingVertical: 8,
         paddingHorizontal: 10,
         borderRadius: 6,
@@ -157,9 +160,8 @@ const styles = StyleSheet.create({
     },
     deleteButton: {
 
-        backgroundColor: '#1f2937',
-        borderColor: '#f70808',
-        borderWidth: 1,
+
+
         paddingVertical: 8,
         paddingHorizontal: 10,
         borderRadius: 6,

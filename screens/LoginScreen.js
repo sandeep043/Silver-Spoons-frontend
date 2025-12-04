@@ -69,8 +69,6 @@ function LoginScreen() {
             dispatch(setToken(response.token));
             dispatch(setIsAuthenticated(true));
             dispatch(setUserId(response.user._id));
-
-            alert('Login successful');
         } catch (err) {
             console.error('Login error:', err);
             setError('Login failed. Please check your credentials and try again.');
@@ -135,11 +133,7 @@ function LoginScreen() {
                     </Text>
                 </Pressable>
 
-                <Pressable onPress={() => nav.navigate('Home')}>
-                    <Text style={styles.signupText}>
-                        Don't have an account? <Text style={styles.signupLink}>Home</Text>
-                    </Text>
-                </Pressable>
+
             </View>
         </View>
     );
