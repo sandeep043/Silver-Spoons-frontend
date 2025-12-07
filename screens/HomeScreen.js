@@ -1,5 +1,5 @@
 import { StyleSheet, Text, View, TextInput, Pressable, Image, TouchableOpacity, FlatList } from "react-native"
-import React, { useState, useCallback, useContext } from 'react';
+import React, { useState, useCallback, useContext, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchCategories, selectCategories } from '../store/categoriesSlice';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
@@ -101,6 +101,78 @@ function HomeScreen() {
 
 
 
+
+    const renderHeader = useCallback(() => (
+        <>
+            {/* Search Bar */}
+            <View style={styles.searchContainer}>
+                <TextInput
+                    style={styles.searchInput}
+                    placeholder="Search"
+                    placeholderTextColor="#6b7280"
+                    value={searchText}
+                    onChangeText={(text) => setSearchText(text)}
+                    onSubmitEditing={handleSearch}
+                />
+                <Pressable style={styles.searchIcon} onPress={handleSearch}>
+                    <Text>🔍</Text>
+                </Pressable>
+            </View>
+
+            {/* Banner Carousel */}
+            <View style={styles.bannerWrapper}>
+                <Carousel dotCount={2}>
+                    <View style={[styles.banner, styles.banner2]}>
+                        <Image
+                            source={welcomeBackImage}
+                            style={styles.bannerImageFull}
+                        />
+                    </View>
+
+                    <View style={[styles.banner, styles.banner2]}>
+                        <Image
+                            source={biryaniImage}
+                            style={styles.bannerImageFull}
+                        />
+                    </View>
+                </Carousel>
+            </View>
+
+
+            {/* Categories Tabs */}
+            {categories && categories.length > 0 && (
+                <FlatList
+                    data={categories}
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    style={styles.categoriesContainer}
+                    contentContainerStyle={{ paddingHorizontal: 16 }}
+                    keyExtractor={(item, index) => String(item) + index}
+                    renderItem={({ item: category }) => (
+                        <Pressable
+                            style={styles.categoryTab}
+                            onPress={() => setSelectedCategory(category)}
+                        >
+                            <Text style={[
+                                styles.categoryText,
+                                selectedCategory === category && styles.categoryTextActive
+                            ]}>
+                                {category}
+                            </Text>
+                            {selectedCategory === category && (
+                                <View style={styles.categoryUnderline} />
+                            )}
+                        </Pressable>
+                    )}
+                />
+            )}
+
+            {/* Product menu (Frequent Orders + Menu Grid) */}
+            <ProductMenu selectedCategory={selectedCategory} />
+
+            <CombinationBreakFast />
+        </>
+    ), [selectedCategory, categories, deliveryAddress, searchText]);
 
     return (
         <View style={styles.container}>

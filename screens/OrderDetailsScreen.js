@@ -6,13 +6,15 @@ function OrderDetailsScreen() {
     const route = useRoute();
     const order = route.params?.order ?? {};
 
-    const orderId = order.orderId ?? order._id ?? order.id ?? '—';
-    const status = order.status ?? order.orderStatus ?? 'Pending';
+    const orderId = order._id;
+    const status = order.orderStatus ?? 'Pending';
     const date = order.date ?? (order.createdAt ? new Date(order.createdAt).toLocaleString() : '');
-    const items = Array.isArray(order.items) ? order.items : [];
+    const items = Array.isArray(order.orderItems) ? order.orderItems : [];
     const address = order.address ?? order.deliveryAddress ?? '';
     const paymentId = order.paymentId ? (order.paymentId._id ?? order.paymentId) : (order.paymentId ?? '—');
     const totalAmount = order.totalAmount ?? order.total ?? 0;
+
+    console.log('items', items);
 
     const getStatusColor = (s) => {
         switch (s) {
@@ -60,16 +62,23 @@ function OrderDetailsScreen() {
                         {items.length === 0 ? (
                             <Text style={styles.emptyText}>No items available</Text>
                         ) : (
-                            items.map((item, idx) => (
-                                <View key={idx} style={styles.itemRow}>
-                                    <Image source={{ uri: item.image }} style={styles.itemImage} />
-                                    <View style={styles.itemInfo}>
-                                        <Text style={styles.itemName}>{item.name}</Text>
-                                        <Text style={styles.itemQty}>Qty: {item.quantity ?? item.qty ?? 1}</Text>
+                            items.map((item, idx) => {
+                                const product = item.productId ?? item;
+                                const itemName = product.name || 'Unknown Item';
+                                const itemImage = product.ImageUrl || product.image || 'https://via.placeholder.com/60';
+                                const itemPrice = product.price || 0;
+                                const itemQty = item.quantity || 1;
+                                return (
+                                    <View key={item._id || idx} style={styles.itemRow}>
+                                        <Image source={{ uri: itemImage }} style={styles.itemImage} />
+                                        <View style={styles.itemInfo}>
+                                            <Text style={styles.itemName}>{itemName}</Text>
+                                            <Text style={styles.itemQty}>Qty: {itemQty}</Text>
+                                        </View>
+                                        <Text style={styles.itemPrice}>₹{itemPrice * itemQty}</Text>
                                     </View>
-                                    <Text style={styles.itemPrice}>₹{(item.price ?? item.unitPrice ?? 0) * (item.quantity ?? item.qty ?? 1)}</Text>
-                                </View>
-                            ))
+                                );
+                            })
                         )}
                     </View>
 

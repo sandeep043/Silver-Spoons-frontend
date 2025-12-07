@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, Button, ActivityIndicator, Alert, ScrollView } from 'react-native';
 import { useSelector } from 'react-redux';
 import { api } from '../utils/PaymentAPI';
+import { getOrderDetails } from '../utils/OrderFetch';
 
 const PaymentResult = ({ route, navigation }) => {
     const { txnid, paymentId, amount, fromWebView } = route.params;
@@ -71,11 +72,6 @@ const PaymentResult = ({ route, navigation }) => {
                     {error}
                 </Text>
                 <Button
-                    title="Check Orders"
-                    onPress={() => navigation.navigate('Orders')}
-                    color="#FF6B6B"
-                />
-                <Button
                     title="Back to Home"
                     onPress={() => navigation.navigate('Home')}
                     color="#999"
@@ -136,10 +132,19 @@ const PaymentResult = ({ route, navigation }) => {
                 </View>
 
                 <Button
-                    title={isSuccess ? 'View Orders' : 'Retry Payment'}
-                    onPress={() => {
-                        if (isSuccess) {
-                            navigation.navigate('Orders');
+                    title={isSuccess ? 'View Order Details' : 'Retry Payment'}
+                    onPress={async () => {
+                        if (isSuccess && paymentData.orderId) {
+                            try {
+                                const orderDetails = await getOrderDetails(token, paymentData.orderId);
+                                const details = orderDetails?.data ?? orderDetails ?? paymentData;
+                                navigation.navigate('OrderDetails', { order: details });
+                            } catch (err) {
+                                console.error('Failed to fetch order details:', err);
+                                Alert.alert('Error', 'Unable to fetch order details. Please try again.');
+                            }
+                        } else if (isSuccess) {
+                            navigation.navigate('OrderHistory');
                         } else {
                             navigation.navigate('Cart');
                         }

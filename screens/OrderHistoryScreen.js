@@ -76,6 +76,7 @@ function OrderHistoryScreen() {
         try {
             const id = order._id ?? order.id ?? order.orderId;
             const res = await getOrderDetails(token, id);
+            console.log('Fetched order details response:', res);
             const details = res?.data ?? res ?? order;
             nav.navigate('OrderDetails', { order: details });
         } catch (err) {
@@ -167,19 +168,26 @@ function OrderHistoryScreen() {
 
                                 {/* Order Items */}
                                 <View style={styles.orderItems}>
-                                    {(order.items || []).map((item, index) => (
-                                        <View key={index} style={styles.orderItem}>
-                                            <Image
-                                                source={{ uri: item.image }}
-                                                style={styles.itemImage}
-                                            />
-                                            <View style={styles.itemDetails}>
-                                                <Text style={styles.itemName}>{item.name}</Text>
-                                                <Text style={styles.itemQuantity}>Qty: {item.quantity}</Text>
+                                    {(order.orderItems || order.items || []).map((item, index) => {
+                                        const product = item.productId ?? item;
+                                        const itemName = product.name || 'Unknown Item';
+                                        const itemImage = product.ImageUrl || product.image || 'https://via.placeholder.com/60';
+                                        const itemPrice = product.price || 0;
+                                        const itemQty = item.quantity || 1;
+                                        return (
+                                            <View key={item._id || index} style={styles.orderItem}>
+                                                <Image
+                                                    source={{ uri: itemImage }}
+                                                    style={styles.itemImage}
+                                                />
+                                                <View style={styles.itemDetails}>
+                                                    <Text style={styles.itemName}>{itemName}</Text>
+                                                    <Text style={styles.itemQuantity}>Qty: {itemQty}</Text>
+                                                </View>
+                                                <Text style={styles.itemPrice}>₹{itemPrice * itemQty}</Text>
                                             </View>
-                                            <Text style={styles.itemPrice}>₹{item.price * item.quantity}</Text>
-                                        </View>
-                                    ))}
+                                        );
+                                    })}
                                 </View>
 
                                 {/* Order Footer */}
@@ -247,6 +255,7 @@ const styles = StyleSheet.create({
     tabsContainer: {
         paddingHorizontal: 16,
         marginBottom: 16,
+        flexGrow: 0,
     },
     tab: {
         paddingHorizontal: 20,
@@ -254,6 +263,7 @@ const styles = StyleSheet.create({
         marginRight: 12,
         borderRadius: 20,
         backgroundColor: '#1a1a1a',
+        minWidth: 'auto',
     },
     tabActive: {
         backgroundColor: '#16a34a',
