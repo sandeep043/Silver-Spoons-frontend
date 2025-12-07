@@ -214,6 +214,11 @@ function RootNavigator() {
           <Stack.Screen name="Settings" options={{ headerShown: false }} component={SettingScreen} />
           <Stack.Screen name="Profile" options={{ headerShown: false }} component={ProfileScreen} />
           <Stack.Screen name="Error" options={{ headerShown: false }} component={ErrorScreen} />
+          <Stack.Screen name="Payment" options={{ headerShown: false }} component={PaymentScreen} />
+          <Stack.Screen name="PaymentResult" options={{ headerShown: false }} component={PaymentResult} />
+          <Stack.Screen name="ProductView" options={{ headerShown: false }} component={ProductViewScreen} />
+          <Stack.Screen name="Error" options={{ headerShown: false }} component={ErrorScreen} />
+          <Stack.Screen name="OrderHistory" options={{ headerShown: false }} component={OrderHistoryScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     );

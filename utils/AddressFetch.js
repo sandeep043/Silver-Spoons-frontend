@@ -51,4 +51,36 @@ const getDefaultAddress = async (token) => {
 }
 
 
-export { getAllAddresses, createAddress, getDefaultAddress };
+const updateAddress = async (addressId, addressData, token) => {
+    try {
+        const response = await axiosInstance.put(`/api/address/${addressId}`, addressData, {
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+            },
+        });
+        return response.data;
+    }
+    catch (error) {
+        console.error('updateAddress error:', error.response?.data || error.message || error);
+
+    }
+};
+
+const deleteAddress = async (addressId, token) => {
+    try {
+        const response = await axiosInstance.delete(`/api/address/${addressId}`, {
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+            },
+        });
+        return response.data;
+    }
+    catch (error) {
+        console.error('deleteAddress error:', error.response?.data || error.message || error);
+
+    }
+};
+
+export { getAllAddresses, createAddress, getDefaultAddress, updateAddress, deleteAddress };
