@@ -29,6 +29,7 @@ import { CartProvider } from './context/CartContext';
 import OrderHistoryScreen from './screens/OrderHistoryScreen';
 
 import { House, Settings, CircleUserRound, Search } from 'lucide-react-native';
+import OrderDetailsScreen from './screens/OrderDetailsScreen';
 
 
 const Stack = createNativeStackNavigator();
@@ -219,6 +220,7 @@ function RootNavigator() {
           <Stack.Screen name="ProductView" options={{ headerShown: false }} component={ProductViewScreen} />
           <Stack.Screen name="Error" options={{ headerShown: false }} component={ErrorScreen} />
           <Stack.Screen name="OrderHistory" options={{ headerShown: false }} component={OrderHistoryScreen} />
+          <Stack.Screen name="OrderDetails" options={{ headerShown: false }} component={OrderDetailsScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     );
@@ -254,6 +256,7 @@ function RootNavigator() {
             <Stack.Screen name="ProductView" options={{ headerShown: false }} component={ProductViewScreen} />
             <Stack.Screen name="Error" options={{ headerShown: false }} component={ErrorScreen} />
             <Stack.Screen name="OrderHistory" options={{ headerShown: false }} component={OrderHistoryScreen} />
+            <Stack.Screen name="OrderDetails" options={{ headerShown: false }} component={OrderDetailsScreen} />
 
           </Stack.Navigator>
         ) : (

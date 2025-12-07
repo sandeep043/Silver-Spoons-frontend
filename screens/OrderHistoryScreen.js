@@ -1,106 +1,38 @@
 import { StyleSheet, Text, View, Pressable, ScrollView, Image, ActivityIndicator } from "react-native"
 import { useState, useEffect } from 'react';
 import { useNavigation } from '@react-navigation/native';
+import { useSelector } from 'react-redux';
+import { OrderHistory, getOrderDetails } from '../utils/OrderFetch';
 
 function OrderHistoryScreen() {
     const nav = useNavigation();
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedTab, setSelectedTab] = useState('All');
+    const { token } = useSelector((state) => state.auth);
 
-    const tabs = ['All', 'Completed', 'Processing', 'Cancelled'];
+    const tabs = ['All'];
 
-    // Sample order data - replace with API call
-    const sampleOrders = [
-        {
-            id: 'ORD001',
-            orderId: '#ORD001234',
-            date: '15 Nov 2024',
-            time: '10:30 AM',
-            status: 'Completed',
-            items: [
-                {
-                    name: 'Plain Dosa',
-                    quantity: 2,
-                    price: 80,
-                    image: 'https://images.unsplash.com/photo-1694809434016-0c2e94b1d0c7?w=400'
-                },
-                {
-                    name: 'Idli Sambar',
-                    quantity: 1,
-                    price: 60,
-                    image: 'https://images.unsplash.com/photo-1630383249896-424e482df921?w=400'
-                }
-            ],
-            totalAmount: 220,
-            deliveryAddress: 'Flat no 9B, Landmark World, Palazhi, Calicut',
-        },
-        {
-            id: 'ORD002',
-            orderId: '#ORD001235',
-            date: '14 Nov 2024',
-            time: '08:15 PM',
-            status: 'Processing',
-            items: [
-                {
-                    name: 'Chicken Biryani',
-                    quantity: 1,
-                    price: 180,
-                    image: 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=400'
-                }
-            ],
-            totalAmount: 210,
-            deliveryAddress: 'Flat no 9B, Landmark World, Palazhi, Calicut',
-        },
-        {
-            id: 'ORD003',
-            orderId: '#ORD001236',
-            date: '12 Nov 2024',
-            time: '07:00 AM',
-            status: 'Completed',
-            items: [
-                {
-                    name: 'Masala Dosa',
-                    quantity: 3,
-                    price: 100,
-                    image: 'https://images.unsplash.com/photo-1668236543090-82eba5ee5976?w=400'
-                },
-                {
-                    name: 'Filter Coffee',
-                    quantity: 2,
-                    price: 40,
-                    image: 'https://images.unsplash.com/photo-1517487881594-2787fef5ebf7?w=400'
-                }
-            ],
-            totalAmount: 380,
-            deliveryAddress: 'Flat no 9B, Landmark World, Palazhi, Calicut',
-        },
-        {
-            id: 'ORD004',
-            orderId: '#ORD001237',
-            date: '10 Nov 2024',
-            time: '12:45 PM',
-            status: 'Cancelled',
-            items: [
-                {
-                    name: 'Fish Curry',
-                    quantity: 1,
-                    price: 150,
-                    image: 'https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?w=400'
-                }
-            ],
-            totalAmount: 180,
-            deliveryAddress: 'Flat no 9B, Landmark World, Palazhi, Calicut',
-        },
-    ];
+    // Orders will be fetched from API
 
     useEffect(() => {
-        // Simulate API call
-        setTimeout(() => {
-            setOrders(sampleOrders);
-            setLoading(false);
-        }, 1000);
-    }, []);
+        const fetchOrders = async () => {
+            setLoading(true);
+            try {
+                const res = await OrderHistory(token);
+                const list = res?.data ?? res ?? [];
+                setOrders(Array.isArray(list) ? list : []);
+                console.log('Fetched orders response:', res);
+            } catch (err) {
+                console.error('Failed to fetch orders:', err);
+                setOrders([]);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        if (token) fetchOrders();
+    }, [token]);
 
     const getStatusColor = (status) => {
         switch (status) {
@@ -130,15 +62,26 @@ function OrderHistoryScreen() {
 
     const filteredOrders = selectedTab === 'All'
         ? orders
-        : orders.filter(order => order.status === selectedTab);
+        : orders.filter(order => {
+            const status = order?.status ?? order?.orderStatus ?? '';
+            return status === selectedTab;
+        });
 
     const handleReorder = (order) => {
         alert(`Reordering: ${order.orderId}`);
         // Add reorder logic here
     };
 
-    const handleViewDetails = (order) => {
-        nav.navigate('OrderDetails', { order });
+    const handleViewDetails = async (order) => {
+        try {
+            const id = order._id ?? order.id ?? order.orderId;
+            const res = await getOrderDetails(token, id);
+            const details = res?.data ?? res ?? order;
+            nav.navigate('OrderDetails', { order: details });
+        } catch (err) {
+            console.error('Failed to fetch order details:', err);
+            nav.navigate('OrderDetails', { order });
+        }
     };
 
     return (
@@ -200,31 +143,31 @@ function OrderHistoryScreen() {
                 <ScrollView showsVerticalScrollIndicator={false}>
                     <View style={styles.ordersContainer}>
                         {filteredOrders.map((order) => (
-                            <View key={order.id} style={styles.orderCard}>
+                            <View key={order._id ?? order.id ?? order.orderId} style={styles.orderCard}>
                                 {/* Order Header */}
                                 <View style={styles.orderHeader}>
                                     <View style={styles.orderHeaderLeft}>
-                                        <Text style={styles.orderId}>{order.orderId}</Text>
+                                        <Text style={styles.orderId}>{order.orderId ?? order._id ?? order.id}</Text>
                                         <Text style={styles.orderDateTime}>
-                                            {order.date} • {order.time}
+                                            {order.date ?? order.createdAt ?? ''} {order.time ? '• ' + order.time : ''}
                                         </Text>
                                     </View>
                                     <View style={[
                                         styles.statusBadge,
-                                        { backgroundColor: getStatusColor(order.status) + '20' }
+                                        { backgroundColor: getStatusColor(order.status ?? order.orderStatus) + '20' }
                                     ]}>
                                         <Text style={[
                                             styles.statusText,
-                                            { color: getStatusColor(order.status) }
+                                            { color: getStatusColor(order.status ?? order.orderStatus) }
                                         ]}>
-                                            {getStatusIcon(order.status)} {order.status}
+                                            {getStatusIcon(order.status ?? order.orderStatus)} {order.status ?? order.orderStatus}
                                         </Text>
                                     </View>
                                 </View>
 
                                 {/* Order Items */}
                                 <View style={styles.orderItems}>
-                                    {order.items.map((item, index) => (
+                                    {(order.items || []).map((item, index) => (
                                         <View key={index} style={styles.orderItem}>
                                             <Image
                                                 source={{ uri: item.image }}
